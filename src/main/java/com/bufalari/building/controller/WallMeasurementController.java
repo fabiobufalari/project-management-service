@@ -3,7 +3,7 @@ package com.bufalari.building.controller;
 import com.bufalari.building.DTO.WallDimensionsDTO;
 import com.bufalari.building.convertTo.ConvertWallDimensionsTo;
 import com.bufalari.building.model.WallMeasurementEntity;
-import com.bufalari.building.service.WallMeasurementService;
+import com.bufalari.building.service.StudsMeasurementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class WallMeasurementController {
 
     @Autowired
-    private WallMeasurementService service;
+    private StudsMeasurementService service;
 
     @Autowired
     private ConvertWallDimensionsTo convertWallDimensionsTo;

@@ -12,8 +12,10 @@ public class WindowDimensionsEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Double windowsWidth;
-    private Double windowsHeight;
+    private Double windowsWidthFoot;
+    private Double windowsWidthInches;
+    private Double windowsHeightFoot;
+    private Double windowsHeightInches;
     private Double windowsThickness;
 
     @ManyToOne

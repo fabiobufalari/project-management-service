@@ -20,13 +20,11 @@ public class WallMeasurementEntity {
     private Double area; // Total area in square feet.
 
     private String identifyWall;
-
-    private Double wallLength;
-
-    private Double wallHeight;
-
+    private Double wallLengthFoot;
+    private Double wallLengthInches;
+    private Double wallHeightFoot;
+    private Double wallHeightInches;
     private Double wallThickness; // Wall thickness
-
     private Double studSpacing;//distance between studs and other.
 
     @Enumerated(EnumType.STRING)
@@ -38,6 +36,10 @@ public class WallMeasurementEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "wallMeasurement")
     private List<DoorDimensionsEntity> doors = new ArrayList<>();
+
+//    @OneToOne(cascade = CascadeType.ALL)
+//    @JoinColumn(name = "top_plate_id")
+//    private TopPlateEntity topPlate;
 
 
     public void setAreaToCalculate(double usableWallArea) {

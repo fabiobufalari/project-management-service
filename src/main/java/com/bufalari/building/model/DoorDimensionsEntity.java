@@ -13,8 +13,10 @@ public class DoorDimensionsEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Double doorWidth;
-    private Double doorHeight;
+    private Double doorWidthFoot;
+    private Double doorWidthInches;
+    private Double doorHeightFoot;
+    private Double doorHeightInches;
     private Double doorThickness;
 
     @ManyToOne
