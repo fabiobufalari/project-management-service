@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,4 +17,7 @@ public class ProjectInfoDTO {
     private String buildingType;
     private int numberOfFloors;
     private boolean hasBasement;
+
+    // Inclusão da lista de CalculationStructureDTO
+    private List<CalculationStructureDTO> calculationStructure;
 }

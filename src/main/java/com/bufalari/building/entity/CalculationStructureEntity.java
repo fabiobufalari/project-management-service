@@ -7,11 +7,13 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FloorEntity {
+public class CalculationStructureEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,12 +24,8 @@ public class FloorEntity {
     private boolean heated;
     private String material;
 
-    @ManyToOne
-    @JoinColumn(name = "project_id")
-    private ProjectEntity project;
-
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "floor_id")
+    @JoinColumn(name = "calculation_structure_id")
     private List<WallEntity> walls;
 
     @OneToOne(cascade = CascadeType.ALL)

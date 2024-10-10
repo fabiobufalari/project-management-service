@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.xml.stream.Location;
 import java.util.List;
 
 @Entity
@@ -24,12 +23,14 @@ public class ProjectEntity {
     private int numberOfFloors;
     private boolean hasBasement;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
-    private List<FloorEntity> floors;
-
-    @Embedded
-    private Location location;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "location_id", referencedColumnName = "id")
+    private LocationEntity locationEntity;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
     private List<HouseOwner> owners;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
+    private List<FloorEntity> floors;
+
 }

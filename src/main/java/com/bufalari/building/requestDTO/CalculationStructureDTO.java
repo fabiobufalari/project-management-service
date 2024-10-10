@@ -10,11 +10,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CalculationStructureDTO {
+    
     private String floorId;
     private int floorNumber;
     private double areaSquareFeet;
     private boolean heated;
     private String material;
+
     private List<WallDTO> walls;
     private CeilingDTO ceiling;
     private BaseboardDTO baseboards;

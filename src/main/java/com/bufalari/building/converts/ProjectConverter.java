@@ -1,9 +1,13 @@
 package com.bufalari.building.converts;
 
-import javax.xml.stream.Location;
-
-import com.bufalari.building.entity.*;
-import com.bufalari.building.requestDTO.*;
+import com.bufalari.building.entity.FloorEntity;
+import com.bufalari.building.entity.LocationEntity;
+import com.bufalari.building.entity.ProjectEntity;
+import com.bufalari.building.entity.WallEntity;
+import com.bufalari.building.requestDTO.CalculationStructureDTO;
+import com.bufalari.building.requestDTO.LocationDTO;
+import com.bufalari.building.requestDTO.ProjectInfoDTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,6 +15,34 @@ import java.util.stream.Collectors;
 
 @Component
 public class ProjectConverter {
+
+    private final WallConverter wallConverter;
+    private final CeilingConverter ceilingConverter;
+    private final BaseboardConverter baseboardConverter;
+    private final PaintingConverter paintingConverter;
+    private final BalconyConverter balconyConverter;
+    private final BathroomAccessoriesConverter bathroomAccessoriesConverter;
+    private final KitchenAccessoriesConverter kitchenAccessoriesConverter;
+    private final RoofConverter roofConverter;
+
+    @Autowired
+    public ProjectConverter(WallConverter wallConverter,
+                            CeilingConverter ceilingConverter,
+                            BaseboardConverter baseboardConverter,
+                            PaintingConverter paintingConverter,
+                            BalconyConverter balconyConverter,
+                            BathroomAccessoriesConverter bathroomAccessoriesConverter,
+                            KitchenAccessoriesConverter kitchenAccessoriesConverter,
+                            RoofConverter roofConverter) {
+        this.wallConverter = wallConverter;
+        this.ceilingConverter = ceilingConverter;
+        this.baseboardConverter = baseboardConverter;
+        this.paintingConverter = paintingConverter;
+        this.balconyConverter = balconyConverter;
+        this.bathroomAccessoriesConverter = bathroomAccessoriesConverter;
+        this.kitchenAccessoriesConverter = kitchenAccessoriesConverter;
+        this.roofConverter = roofConverter;
+    }
 
     public ProjectEntity toEntity(ProjectInfoDTO dto) {
         ProjectEntity entity = new ProjectEntity();
@@ -21,7 +53,7 @@ public class ProjectConverter {
         entity.setHasBasement(dto.isHasBasement());
 
         // Converte a localização
-        entity.setLocation(convertLocation(dto.getLocation()));
+        entity.setLocationEntity(convertLocationEntity(dto.getLocation()));
 
         // Converte os andares (floors)
         List<FloorEntity> floors = dto.getCalculationStructure().stream()
@@ -42,68 +74,23 @@ public class ProjectConverter {
 
         // Converte as paredes (walls)
         List<WallEntity> walls = dto.getWalls().stream()
-                .map(this::convertWall)
+                .map(wallConverter::toEntity)
                 .collect(Collectors.toList());
         entity.setWalls(walls);
 
-        return entity;
-    }
-
-    private WallEntity convertWall(WallDTO dto) {
-        WallEntity entity = new WallEntity();
-        entity.setWallId(dto.getWallId());
-        entity.setDescription(dto.getDescription());
-        entity.setType(dto.getType());
-        entity.setLengthFoot(dto.getLengthFoot());
-        entity.setLengthInches(dto.getLengthInches());
-        entity.setHeightFoot(dto.getHeightFoot());
-        entity.setHeightInches(dto.getHeightInches());
-        entity.setWallThicknessInch(dto.getWallThicknessInch());
-        entity.setMaterial(dto.getMaterial());
-
-        // Converte as janelas
-        if (dto.getWindows() != null) {
-            List<WindowEntity> windows = dto.getWindows().stream()
-                    .map(this::convertWindow)
-                    .collect(Collectors.toList());
-            entity.setWindows(windows);
-        }
-
-        // Converte as portas
-        if (dto.getDoors() != null) {
-            List<DoorEntity> doors = dto.getDoors().stream()
-                    .map(this::convertDoor)
-                    .collect(Collectors.toList());
-            entity.setDoors(doors);
-        }
+        entity.setCeiling(ceilingConverter.toEntity(dto.getCeiling()));
+        entity.setBaseboards(baseboardConverter.toEntity(dto.getBaseboards()));
+        entity.setPainting(paintingConverter.toEntity(dto.getPainting()));
+        entity.setBalcony(balconyConverter.toEntity(dto.getBalcony()));
+        entity.setBathroomAccessories(bathroomAccessoriesConverter.toEntity(dto.getBathroomAccessories()));
+        entity.setKitchenAccessories(kitchenAccessoriesConverter.toEntity(dto.getKitchenAccessories()));
+        entity.setRoof(roofConverter.toEntity(dto.getRoof()));
 
         return entity;
     }
 
-    private WindowEntity convertWindow(WindowDTO dto) {
-        WindowEntity entity = new WindowEntity();
-        entity.setWindowId(dto.getWindowId());
-        entity.setWidthFoot(dto.getDimensions().getWidthFoot());
-        entity.setWidthInches(dto.getDimensions().getWidthInches());
-        entity.setHeightFoot(dto.getDimensions().getHeightFoot());
-        entity.setHeightInches(dto.getDimensions().getHeightInches());
-        entity.setThicknessInch(dto.getDimensions().getThicknessInch());
-        return entity;
-    }
-
-    private DoorEntity convertDoor(DoorDTO dto) {
-        DoorEntity entity = new DoorEntity();
-        entity.setDoorId(dto.getDoorId());
-        entity.setWidthFoot(dto.getDimensions().getWidthFoot());
-        entity.setWidthInches(dto.getDimensions().getWidthInches());
-        entity.setHeightFoot(dto.getDimensions().getHeightFoot());
-        entity.setHeightInches(dto.getDimensions().getHeightInches());
-        entity.setThicknessInch(dto.getDimensions().getThicknessInch());
-        return entity;
-    }
-
-    private Location convertLocation(LocationDTO dto) {
-        return new Location(
+    private LocationEntity convertLocationEntity(LocationDTO dto) {
+        return new LocationEntity(
                 dto.getAddress(),
                 dto.getCity(),
                 dto.getProvince(),
