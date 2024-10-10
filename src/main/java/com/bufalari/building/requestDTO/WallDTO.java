@@ -1,26 +1,30 @@
 package com.bufalari.building.requestDTO;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+// WallDTO
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class WallDTO {
-    private String wallId;
+    private Long wallId;
     private String description;
-    private String type;  // external or internal
+    private String type;
     private double lengthFoot;
-    private int lengthInches;
+    private double lengthInches;
     private double heightFoot;
-    private int heightInches;
+    private double heightInches;
     private double wallThicknessInch;
     private String material;
-    private boolean isWetArea;
-    private int studSpacingInch;
+    private boolean isExternal; // Indica se a parede é externa
+
     private List<WindowDTO> windows;
     private List<DoorDTO> doors;
 }

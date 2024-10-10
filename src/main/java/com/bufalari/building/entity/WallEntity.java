@@ -1,6 +1,5 @@
 package com.bufalari.building.entity;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+// WallEntity
 @Entity
 @Data
 @NoArgsConstructor
@@ -15,18 +15,19 @@ import java.util.List;
 public class WallEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long wallId;
 
-    private String wallId;
     private String description;
-    private String type;  // external or internal
+    private String type;
     private double lengthFoot;
-    private int lengthInches;
+    private double lengthInches;
     private double heightFoot;
-    private int heightInches;
+    private double heightInches;
     private double wallThicknessInch;
     private String material;
+    private boolean isExternal; // Define se a parede é externa ou interna
 
+    // Adiciona listas de janelas e portas
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "wall_id")
     private List<WindowEntity> windows;
@@ -34,4 +35,11 @@ public class WallEntity {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "wall_id")
     private List<DoorEntity> doors;
+
+    // Referência para FloorEntity
+    @ManyToOne
+    @JoinColumn(name = "floor_id")
+    private FloorEntity floor;
+
+
 }

@@ -72,7 +72,6 @@ public class ProjectConverter {
         entity.setHeated(dto.isHeated());
         entity.setMaterial(dto.getMaterial());
 
-        // Converte as paredes (walls)
         List<WallEntity> walls = dto.getWalls().stream()
                 .map(wallConverter::toEntity)
                 .collect(Collectors.toList());
