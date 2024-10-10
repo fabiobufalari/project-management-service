@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -18,7 +19,7 @@ public class ProjectEntity {
     private Long id;
 
     private String projectName;
-    private String dateTime;
+    private LocalDateTime dateTime;
     private String buildingType;
     private int numberOfFloors;
     private boolean hasBasement;

@@ -10,24 +10,23 @@ import java.util.List;
 
 @Entity
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class RoomEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long roomId;
+    private Long id;
 
-    private String roomType;  // Type of room (e.g., "Living Room", "Bedroom")
-    private int floorNumber;  // Floor where this room is located
+    private String roomType; // Tipo de cômodo (ex: "Sala", "Quarto")
+    private int floorNumber;
+    private boolean isWetArea;
 
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
-    private List<WallEntity> walls = new ArrayList<>();  // Walls associated with this room
-
-    // Constructor
-    public RoomEntity() {}
-
-    public RoomEntity(String roomType, int floorNumber) {
-        this.roomType = roomType;
-        this.floorNumber = floorNumber;
-    }
-
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "wall_room",
+            joinColumns = @JoinColumn(name = "room_id"),
+            inverseJoinColumns = @JoinColumn(name = "wall_id")
+    )
+    private List<WallEntity> walls = new ArrayList<>();
 }

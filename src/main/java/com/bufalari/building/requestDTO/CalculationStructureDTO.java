@@ -25,4 +25,5 @@ public class CalculationStructureDTO {
     private BathroomAccessoriesDTO bathroomAccessories;
     private KitchenAccessoriesDTO kitchenAccessories;
     private RoofDTO roof;
+    public boolean isWetArea;
 }

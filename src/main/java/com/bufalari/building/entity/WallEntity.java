@@ -5,9 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
-// WallEntity
 @Entity
 @Data
 @NoArgsConstructor
@@ -15,8 +15,9 @@ import java.util.List;
 public class WallEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long wallId;
+    private Long id;
 
+    private Long wallId;
     private String description;
     private String type;
     private double lengthFoot;
@@ -24,15 +25,11 @@ public class WallEntity {
     private double heightFoot;
     private double heightInches;
     private double wallThicknessInch;
-    private String material;
-    private boolean isExternal; // Define se a parede é externa ou interna
+    private String materialType;
+    private double linearFootage;
+    private double squareFootage;
+    private boolean isExternal;
 
-    private double length;    // Length of the wall
-    private double height;    // Height of the wall
-    private double linearFootage;  // Calculated value
-    private double squareFootage;  // Calculated value
-
-    // Adiciona listas de janelas e portas
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "wall_id")
     private List<WindowEntity> windows;
@@ -41,12 +38,23 @@ public class WallEntity {
     @JoinColumn(name = "wall_id")
     private List<DoorEntity> doors;
 
-    // Referência para FloorEntity
-    @ManyToOne
-    @JoinColumn(name = "floor_id")
-    private FloorEntity floor;
+    @ManyToMany(mappedBy = "walls")
+    private List<RoomEntity> rooms = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "room_id")
-    private RoomEntity room;
+    // Método auxiliar para calcular o comprimento total em pés
+    public double getTotalLengthInFeet() {
+        return lengthFoot + (lengthInches / 12);
+    }
+
+    // Método auxiliar para calcular a altura total em pés
+    public double getTotalHeightInFeet() {
+        return heightFoot + (heightInches / 12);
+    }
+
+    public double Length;
+
+    public double height;
+
+    public void setMaterial(String material) {
+    }
 }

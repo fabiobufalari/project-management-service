@@ -1,61 +1,69 @@
 package com.bufalari.building.converts;
 
-import com.bufalari.building.entity.FloorEntity;
-import com.bufalari.building.entity.LocationEntity;
-import com.bufalari.building.entity.ProjectEntity;
-import com.bufalari.building.entity.WallEntity;
-import com.bufalari.building.requestDTO.CalculationStructureDTO;
-import com.bufalari.building.requestDTO.LocationDTO;
-import com.bufalari.building.requestDTO.ProjectInfoDTO;
+import com.bufalari.building.entity.*;
+import com.bufalari.building.repository.RoomRepository;
+import com.bufalari.building.repository.WallRoomMappingRepository;
+import com.bufalari.building.requestDTO.*;
+import com.bufalari.building.service.WallCalculationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 public class ProjectConverter {
 
-    private final WallConverter wallConverter;
-    private final CeilingConverter ceilingConverter;
-    private final BaseboardConverter baseboardConverter;
-    private final PaintingConverter paintingConverter;
-    private final BalconyConverter balconyConverter;
-    private final BathroomAccessoriesConverter bathroomAccessoriesConverter;
-    private final KitchenAccessoriesConverter kitchenAccessoriesConverter;
-    private final RoofConverter roofConverter;
+    @Autowired
+    private WallCalculationService wallCalculationService;
 
     @Autowired
-    public ProjectConverter(WallConverter wallConverter,
-                            CeilingConverter ceilingConverter,
-                            BaseboardConverter baseboardConverter,
-                            PaintingConverter paintingConverter,
-                            BalconyConverter balconyConverter,
-                            BathroomAccessoriesConverter bathroomAccessoriesConverter,
-                            KitchenAccessoriesConverter kitchenAccessoriesConverter,
-                            RoofConverter roofConverter) {
-        this.wallConverter = wallConverter;
-        this.ceilingConverter = ceilingConverter;
-        this.baseboardConverter = baseboardConverter;
-        this.paintingConverter = paintingConverter;
-        this.balconyConverter = balconyConverter;
-        this.bathroomAccessoriesConverter = bathroomAccessoriesConverter;
-        this.kitchenAccessoriesConverter = kitchenAccessoriesConverter;
-        this.roofConverter = roofConverter;
+    private RoomRepository roomRepository;
+
+    @Autowired
+    private WallRoomMappingRepository wallRoomMappingRepository;
+
+    // ... (outros métodos de conversão) ...
+    private WallEntity convertWall(WallDTO dto, int floorNumber) {
+        WallEntity entity = new WallEntity();
+        // ... (mapear atributos básicos da parede) ...
+
+        // Calcular linearFootage e squareFootage usando WallCalculationService
+        entity.setLinearFootage(wallCalculationService.calculateLinearFootage(entity));
+        entity.setSquareFootage(wallCalculationService.calculateSquareFootage(entity));
+
+        // Relacionar a parede com os ambientes (usando WallRoomMapping)
+        for (RoomSideDTO roomSideDTO : dto.getRoomSides()) {
+            RoomEntity roomEntity = roomRepository.findByRoomTypeAndFloorNumber(
+                    roomSideDTO.getRoomType(), floorNumber).orElse(null);
+
+            if (roomEntity != null) {
+                WallRoomMapping mapping = new WallRoomMapping();
+                mapping.setWall(entity);
+                mapping.setRoom(roomEntity); // Corrigido: atribuir a RoomEntity correta
+                mapping.setSide(roomSideDTO.getSideOfWall());
+
+                wallRoomMappingRepository.save(mapping);
+            }
+        }
+
+        return entity;
     }
+
 
     public ProjectEntity toEntity(ProjectInfoDTO dto) {
         ProjectEntity entity = new ProjectEntity();
         entity.setProjectName(dto.getProjectName());
-        entity.setDateTime(dto.getDateTime());
+        entity.setDateTime(LocalDateTime.parse(dto.getDateTime()));
         entity.setBuildingType(dto.getBuildingType());
         entity.setNumberOfFloors(dto.getNumberOfFloors());
         entity.setHasBasement(dto.isHasBasement());
 
-        // Converte a localização
+        // Converter a localização usando o novo método convertLocationEntity
         entity.setLocationEntity(convertLocationEntity(dto.getLocation()));
 
-        // Converte os andares (floors)
+        // Converter e definir os andares do projeto usando o novo método convertFloor
         List<FloorEntity> floors = dto.getCalculationStructure().stream()
                 .map(this::convertFloor)
                 .collect(Collectors.toList());
@@ -71,23 +79,20 @@ public class ProjectConverter {
         entity.setAreaSquareFeet(dto.getAreaSquareFeet());
         entity.setHeated(dto.isHeated());
         entity.setMaterial(dto.getMaterial());
+        entity.setWetArea(dto.isWetArea());
 
+        // Converter as paredes (walls)
         List<WallEntity> walls = dto.getWalls().stream()
-                .map(wallConverter::toEntity)
+                .map(wallDTO -> convertWall(wallDTO, dto.getFloorNumber())) // Passar floorNumber para convertWall
                 .collect(Collectors.toList());
         entity.setWalls(walls);
 
-        entity.setCeiling(ceilingConverter.toEntity(dto.getCeiling()));
-        entity.setBaseboards(baseboardConverter.toEntity(dto.getBaseboards()));
-        entity.setPainting(paintingConverter.toEntity(dto.getPainting()));
-        entity.setBalcony(balconyConverter.toEntity(dto.getBalcony()));
-        entity.setBathroomAccessories(bathroomAccessoriesConverter.toEntity(dto.getBathroomAccessories()));
-        entity.setKitchenAccessories(kitchenAccessoriesConverter.toEntity(dto.getKitchenAccessories()));
-        entity.setRoof(roofConverter.toEntity(dto.getRoof()));
+        // ... (Converter outros elementos: ceiling, baseboards, etc. - LEMBRE-SE de implementar esses métodos!) ...
 
         return entity;
     }
 
+    // Método para converter LocationDTO em LocationEntity
     private LocationEntity convertLocationEntity(LocationDTO dto) {
         return new LocationEntity(
                 dto.getAddress(),
