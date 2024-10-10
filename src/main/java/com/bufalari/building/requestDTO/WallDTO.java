@@ -25,6 +25,11 @@ public class WallDTO {
     private String material;
     private boolean isExternal; // Indica se a parede é externa
 
+    private double height;
+    private double length;
+    private String materialType;
+    private List<RoomSideDTO> roomSides;
+
     private List<WindowDTO> windows;
     private List<DoorDTO> doors;
 }

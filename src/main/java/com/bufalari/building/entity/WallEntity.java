@@ -27,6 +27,11 @@ public class WallEntity {
     private String material;
     private boolean isExternal; // Define se a parede é externa ou interna
 
+    private double length;    // Length of the wall
+    private double height;    // Height of the wall
+    private double linearFootage;  // Calculated value
+    private double squareFootage;  // Calculated value
+
     // Adiciona listas de janelas e portas
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "wall_id")
@@ -41,5 +46,7 @@ public class WallEntity {
     @JoinColumn(name = "floor_id")
     private FloorEntity floor;
 
-
+    @ManyToOne
+    @JoinColumn(name = "room_id")
+    private RoomEntity room;
 }
