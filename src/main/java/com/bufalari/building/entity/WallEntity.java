@@ -64,6 +64,8 @@ public class WallEntity {
     public double Length;
 
     public double height;
+    public String roomSides;
+
 
     public void setMaterial(String material) {
     }

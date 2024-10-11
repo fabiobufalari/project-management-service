@@ -22,7 +22,7 @@ public class RoomEntity {
 
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(columnDefinition = "BYTEA")
-    private UUID uuid; // Atributo UUID para RoomEntity
+    private UUID uuid;
 
     private String roomType; // Tipo de cômodo (ex: "Sala", "Quarto")
     private int floorNumber;
