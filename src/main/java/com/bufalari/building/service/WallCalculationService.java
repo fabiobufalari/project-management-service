@@ -37,4 +37,17 @@ public class WallCalculationService {
     public double calculateSquareFootage(double lengthInFeet, double heightInFeet) {
         return lengthInFeet * heightInFeet;
     }
+
+    public WallEntity calculateWall(WallEntity wallEntity) {
+        // Calcula as medidas da parede
+        wallEntity.setLinearFootage(calculateLinearFootage(wallEntity.getTotalLengthInFeet()));
+        wallEntity.setSquareFootage(calculateSquareFootage(wallEntity.getTotalLengthInFeet(), wallEntity.getTotalHeightInFeet()));
+
+        // Lógica para determinar o tipo de material da parede (implementar de acordo com as suas regras)
+        // Neste exemplo, assumimos que todas as paredes externas são de concreto e as internas de drywall
+        String materialType = determineMaterialType(wallEntity, null); // Passe o RoomEntity correto aqui, se necessário
+        wallEntity.setMaterialType(materialType);
+
+        return wallEntity;
+    }
 }

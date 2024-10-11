@@ -18,6 +18,11 @@ public class ProjectService {
     @Autowired
     private ProjectConverter projectConverter;
 
+
+    public ProjectEntity createProject(ProjectEntity projectEntity) {
+        return projectRepository.save(projectEntity);
+    }
+
     public ProjectEntity createProject(ProjectInfoDTO projectInfoDTO) {
         ProjectEntity entity = projectConverter.toEntity(projectInfoDTO);
         return projectRepository.save(entity);

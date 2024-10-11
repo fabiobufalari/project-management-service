@@ -1,10 +1,12 @@
 package com.bufalari.building.controller;
 
+import com.bufalari.building.converts.ProjectConverter;
 import com.bufalari.building.entity.ProjectEntity;
 import com.bufalari.building.requestDTO.ProjectInfoDTO;
 import com.bufalari.building.responseDTO.CalculationResponseDTO;
 import com.bufalari.building.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,10 +20,14 @@ public class ProjectController {
     @Autowired
     private ProjectService projectService;
 
-    @PostMapping
+    @Autowired
+    private ProjectConverter projectConverter;
+
+    @PostMapping("/create")
     public ResponseEntity<ProjectEntity> createProject(@RequestBody ProjectInfoDTO projectInfoDTO) {
-        ProjectEntity project = projectService.createProject(projectInfoDTO);
-        return ResponseEntity.ok(project);
+        ProjectEntity projectEntity = projectConverter.toEntity(projectInfoDTO);
+        ProjectEntity savedProject = projectService.createProject(projectEntity);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedProject);
     }
 
     @PostMapping("/calculate")

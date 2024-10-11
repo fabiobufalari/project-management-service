@@ -24,7 +24,7 @@ public class ProjectConverter {
     @Autowired
     private WallRoomMappingRepository wallRoomMappingRepository;
 
-    // ... (outros métodos de conversão) ...
+
     private WallEntity convertWall(WallDTO dto, int floorNumber) {
         WallEntity entity = new WallEntity();
         // ... (mapear atributos básicos da parede) ...
@@ -41,7 +41,7 @@ public class ProjectConverter {
             if (roomEntity != null) {
                 WallRoomMapping mapping = new WallRoomMapping();
                 mapping.setWall(entity);
-                mapping.setRoom(roomEntity); // Corrigido: atribuir a RoomEntity correta
+                mapping.setRoom(roomEntity);
                 mapping.setSide(roomSideDTO.getSideOfWall());
 
                 wallRoomMappingRepository.save(mapping);
