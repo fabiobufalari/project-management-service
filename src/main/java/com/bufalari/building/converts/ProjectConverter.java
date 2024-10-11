@@ -2,6 +2,7 @@ package com.bufalari.building.converts;
 
 import com.bufalari.building.entity.*;
 import com.bufalari.building.repository.RoomRepository;
+import com.bufalari.building.repository.WallRepository;
 import com.bufalari.building.repository.WallRoomMappingRepository;
 import com.bufalari.building.requestDTO.*;
 import com.bufalari.building.service.WallCalculationService;
@@ -24,6 +25,9 @@ public class ProjectConverter {
     @Autowired
     private WallRoomMappingRepository wallRoomMappingRepository;
 
+    @Autowired
+    private WallRepository wallRepository;
+
 
     public WallEntity convertWall(WallDTO dto, int floorNumber) {
         WallEntity entity = new WallEntity();
@@ -35,11 +39,14 @@ public class ProjectConverter {
         entity.setHeightFoot(dto.getHeightFoot());
         entity.setHeightInches(dto.getHeightInches());
         entity.setWallThicknessInch(dto.getWallThicknessInch());
-        entity.setFloorNumber(floorNumber); // Definir o floorNumber na entidade
+        entity.setFloorNumber(floorNumber);
 
         // Calcula as medidas da parede
         entity.setLinearFootage(wallCalculationService.calculateLinearFootage(entity.getTotalLengthInFeet()));
         entity.setSquareFootage(wallCalculationService.calculateSquareFootage(entity.getTotalLengthInFeet(), entity.getTotalHeightInFeet()));
+
+        // Persistir a WallEntity primeiro
+        entity = wallRepository.save(entity); // Salvar a entidade antes de associá-la aos ambientes
 
         // Relacionar a parede com os ambientes (usando WallRoomMapping) e determinar o tipo de material
         for (RoomSideDTO roomSideDTO : dto.getRoomSides()) {
@@ -52,11 +59,13 @@ public class ProjectConverter {
                 mapping.setRoom(roomEntity);
                 mapping.setSide(roomSideDTO.getSideOfWall());
 
-                // Determinar o tipo de material da parede com base no ambiente
-                String materialType = wallCalculationService.determineMaterialType(entity, roomEntity);
-                entity.setMaterialType(materialType);
+                // Adicionar a parede à lista de paredes do ambiente (bidirecional)
+                roomEntity.getWalls().add(entity);
+                entity.getRooms().add(roomEntity);
 
                 wallRoomMappingRepository.save(mapping);
+
+                // ... (determinar o materialType) ...
             }
         }
 
