@@ -159,11 +159,40 @@ public class ProjectConverter {
 
         // Converter as paredes (walls)
         List<WallEntity> walls = dto.getWalls().stream()
-                .map(wallDTO -> convertWall(wallDTO, dto.getFloorNumber())) // Passar floorNumber para convertWall
+                .map(wallDTO -> convertWall(wallDTO, dto.getFloorNumber()))
                 .collect(Collectors.toList());
         entity.setWalls(walls);
 
-        // ... (Converter outros elementos: ceiling, baseboards, etc. - LEMBRE-SE de implementar esses métodos!) ...
+        // ===>>> GERAR UUID PARA CADA ROOMENTITY: <<<===
+        for (WallEntity wall : entity.getWalls()) {
+            for (RoomSideDTO roomSideDTO : wall.getRoomSides()) {
+                String roomType = roomSideDTO.getRoomType();
+                int floorNumber = wall.getFloorNumber();
+
+                // Buscar a RoomEntity pelo roomType e floorNumber
+                RoomEntity roomEntity = roomRepository.findByRoomTypeAndFloorNumber(roomType, floorNumber)
+                        .orElseGet(() -> {
+                            // Se a RoomEntity não existir, criar uma nova com UUID
+                            RoomEntity newRoom = new RoomEntity();
+                            newRoom.setRoomType(roomType);
+                            newRoom.setFloorNumber(floorNumber);
+                            newRoom.setWetArea(roomSideDTO.isWetArea());
+                            newRoom.setUuid(UUID.randomUUID()); // Gerar um novo UUID
+                            return roomRepository.save(newRoom); // Persistir a nova RoomEntity
+                        });
+
+                // Criar WallRoomMapping
+                WallRoomMapping mapping = new WallRoomMapping();
+                mapping.setWall(wall);
+                mapping.setRoom(roomEntity);
+                mapping.setSide(roomSideDTO.getSideOfWall());
+
+                wallRoomMappingRepository.save(mapping);
+                System.out.println("WallRoomMapping salvo com ID: " + mapping.getId());
+            }
+        }
+
+        // ... (Converter outros elementos: ceiling, baseboards, etc.) ...
 
         return entity;
     }
