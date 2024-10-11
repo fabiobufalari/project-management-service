@@ -17,13 +17,19 @@ public class WallCalculationService {
         return wall.getLength() * wall.getHeight();
     }
 
+
     public String determineMaterialType(WallEntity wall, RoomEntity room) {
         if (wall.isExternal()) {
-            return "Concrete";
-        } else if (room.isWetArea()) { // Agora room não será mais nulo
-            return "Moisture Resistant Drywall";
+            return "Concrete"; // Parede externa sempre de concreto
         } else {
-            return "Drywall";
+            // Se roomEntity não for encontrado, use um material padrão
+            if (room == null) {
+                return "Default Material";
+            } else if (room.isWetArea()) {
+                return "Moisture Resistant Drywall";
+            } else {
+                return "Drywall";
+            }
         }
     }
 

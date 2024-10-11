@@ -23,4 +23,7 @@ public class DoorEntity {
     private double heightFoot;
     private int heightInches;
     private double thicknessInch;
+
+    private Double width;
+    private Double height;
 }

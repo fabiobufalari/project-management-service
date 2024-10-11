@@ -6,11 +6,13 @@ import com.bufalari.building.repository.WallRepository;
 import com.bufalari.building.repository.WallRoomMappingRepository;
 import com.bufalari.building.requestDTO.*;
 import com.bufalari.building.service.WallCalculationService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -28,7 +30,13 @@ public class ProjectConverter {
     @Autowired
     private WallRepository wallRepository;
 
+    @Autowired
+    private WindowConverter windowConverter;
 
+    @Autowired
+    private DoorConverter doorConverter;
+
+    @Transactional
     public WallEntity convertWall(WallDTO dto, int floorNumber) {
         WallEntity entity = new WallEntity();
         entity.setWallId(dto.getWallId());
@@ -41,35 +49,82 @@ public class ProjectConverter {
         entity.setWallThicknessInch(dto.getWallThicknessInch());
         entity.setFloorNumber(floorNumber);
 
+        // Gerar um novo UUID
+        UUID newUuid = UUID.randomUUID();
+        entity.setUuid(newUuid); // Definir o UUID diretamente
+
+        List<WindowEntity> windowEntities = dto.getWindows().stream()
+                .map(windowConverter::toEntity) // Chamar o método de conversão
+                .collect(Collectors.toList());
+        entity.setWindows(windowEntities); // Definir a lista na WallEntity
+
+        // Converter as portas
+        List<DoorEntity> doorEntities = dto.getDoors().stream()
+                .map(doorConverter::toEntity) // Chamar o método de conversão
+                .collect(Collectors.toList());
+        entity.setDoors(doorEntities); // Definir a lista na WallEntity
+
         // Calcula as medidas da parede
         entity.setLinearFootage(wallCalculationService.calculateLinearFootage(entity.getTotalLengthInFeet()));
         entity.setSquareFootage(wallCalculationService.calculateSquareFootage(entity.getTotalLengthInFeet(), entity.getTotalHeightInFeet()));
 
         // Persistir a WallEntity primeiro
-        entity = wallRepository.save(entity); // Salvar a entidade antes de associá-la aos ambientes
+        entity = wallRepository.save(entity);
 
-        // Relacionar a parede com os ambientes (usando WallRoomMapping) e determinar o tipo de material
+        // Relacionar a parede com os ambientes (usando WallRoomMapping)
         for (RoomSideDTO roomSideDTO : dto.getRoomSides()) {
             RoomEntity roomEntity = roomRepository.findByRoomTypeAndFloorNumber(
                     roomSideDTO.getRoomType(), floorNumber).orElse(null);
 
             if (roomEntity != null) {
+                System.out.println("RoomEntity encontrada: " + roomEntity.getRoomType());
+
                 WallRoomMapping mapping = new WallRoomMapping();
                 mapping.setWall(entity);
                 mapping.setRoom(roomEntity);
                 mapping.setSide(roomSideDTO.getSideOfWall());
 
+                wallRoomMappingRepository.save(mapping);
+                System.out.println("WallRoomMapping salvo com ID: " + mapping.getId());
+
                 // Adicionar a parede à lista de paredes do ambiente (bidirecional)
                 roomEntity.getWalls().add(entity);
                 entity.getRooms().add(roomEntity);
 
-                wallRoomMappingRepository.save(mapping);
-
-                // ... (determinar o materialType) ...
+                // ===>>> REMOVER A DEFINIÇÃO DE materialType AQUI <<<===
+                // ===>>> (ela será definida após o loop) <<<===
+            } else {
+                System.out.println("RoomEntity não encontrada para roomType: " + roomSideDTO.getRoomType() + " e floorNumber: " + floorNumber);
             }
         }
 
+        // ===>>> DETERMINAR O MATERIALTYPE APÓS O LOOP: <<<===
+        String materialType = determineWallMaterialType(entity); // Novo método para determinar o material
+        entity.setMaterialType(materialType);
+
+        // Atualizar a WallEntity com o materialType definido
+        entity = wallRepository.save(entity);
+
+        // Forçar o carregamento da lista rooms
+        entity.getRooms().size();
+
         return entity;
+    }
+
+    // ===>>> NOVO MÉTODO PARA DETERMINAR O MATERIAL DA PAREDE: <<<===
+    private String determineWallMaterialType(WallEntity wall) {
+        if (wall.isExternal()) {
+            return "Concrete"; // Parede externa sempre de concreto
+        }
+
+        // Verificar se algum dos ambientes é área molhada
+        boolean hasWetArea = wall.getRooms().stream().anyMatch(RoomEntity::isWetArea);
+
+        if (hasWetArea) {
+            return "Moisture Resistant Drywall"; // Usar material resistente à umidade
+        } else {
+            return "Drywall"; // Usar drywall comum
+        }
     }
 
 
