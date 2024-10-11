@@ -1,7 +1,7 @@
 package com.bufalari.building.controller;
 
 
-import com.bufalari.building.DTO.WallDTO;
+import com.bufalari.building.requestDTO.WallDTO;
 import com.bufalari.building.converts.ProjectConverter;
 import com.bufalari.building.entity.WallEntity;
 import com.bufalari.building.service.WallCalculationService;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/walls")
+@RequestMapping("/api/walls")
 public class WallController {
 
     @Autowired
@@ -25,10 +25,15 @@ public class WallController {
 
     @PostMapping("/calculate")
     public ResponseEntity<WallEntity> calculateWall(@RequestBody WallDTO wallDTO) {
+        // Obter o floorNumber do WallDTO (você precisa adicionar esse campo ao DTO)
+        int floorNumber = wallDTO.getFloorNumber(); // Supondo que você tenha adicionado o campo floorNumber ao WallDTO
 
-        WallEntity wallEntity = projectConverter.toEntity(wallDTO); // Converter o DTO para a entidade
+        // Converter o DTO para entidade, passando o floorNumber
+        WallEntity wallEntity = projectConverter.convertWall(wallDTO, floorNumber);
 
-        WallEntity calculatedWall = wallCalculationService.calculateWall(wallEntity); // Calcular as medidas
+        // Calcular as medidas da parede
+        WallEntity calculatedWall = wallCalculationService.calculateWall(wallEntity);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(calculatedWall);
     }
 }

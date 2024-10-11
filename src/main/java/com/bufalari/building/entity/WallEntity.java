@@ -17,7 +17,7 @@ public class WallEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long wallId;
+    private String wallId;
     private String description;
     private String type;
     private double lengthFoot;
@@ -29,6 +29,7 @@ public class WallEntity {
     private double linearFootage;
     private double squareFootage;
     private boolean isExternal;
+    private int floorNumber;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "wall_id")

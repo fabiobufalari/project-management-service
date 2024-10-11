@@ -1,7 +1,9 @@
 package com.bufalari.building.service;
 
+
 import com.bufalari.building.entity.RoomEntity;
 import com.bufalari.building.entity.WallEntity;
+import com.bufalari.building.requestDTO.RoomSideDTO;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,11 +19,11 @@ public class WallCalculationService {
 
     public String determineMaterialType(WallEntity wall, RoomEntity room) {
         if (wall.isExternal()) {
-            return "Concrete"; // Paredes externas usam concreto
-        } else if (room.isWetArea()) {
-            return "Moisture Resistant Drywall"; // Paredes internas de áreas molhadas
+            return "Concrete";
+        } else if (room.isWetArea()) { // Agora room não será mais nulo
+            return "Moisture Resistant Drywall";
         } else {
-            return "Drywall"; // Paredes internas de áreas secas
+            return "Drywall";
         }
     }
 
@@ -42,12 +44,6 @@ public class WallCalculationService {
         // Calcula as medidas da parede
         wallEntity.setLinearFootage(calculateLinearFootage(wallEntity.getTotalLengthInFeet()));
         wallEntity.setSquareFootage(calculateSquareFootage(wallEntity.getTotalLengthInFeet(), wallEntity.getTotalHeightInFeet()));
-
-        // Lógica para determinar o tipo de material da parede (implementar de acordo com as suas regras)
-        // Neste exemplo, assumimos que todas as paredes externas são de concreto e as internas de drywall
-        String materialType = determineMaterialType(wallEntity, null); // Passe o RoomEntity correto aqui, se necessário
-        wallEntity.setMaterialType(materialType);
-
         return wallEntity;
     }
 }

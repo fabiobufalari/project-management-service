@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WallDTO {
-    private Long wallId;
+    private String wallId;
     private String description;
     private String type;
     private double lengthFoot;
@@ -32,4 +32,6 @@ public class WallDTO {
 
     private List<WindowDTO> windows;
     private List<DoorDTO> doors;
+
+    private int floorNumber;
 }

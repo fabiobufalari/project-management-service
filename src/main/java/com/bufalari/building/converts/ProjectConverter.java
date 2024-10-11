@@ -25,15 +25,23 @@ public class ProjectConverter {
     private WallRoomMappingRepository wallRoomMappingRepository;
 
 
-    private WallEntity convertWall(WallDTO dto, int floorNumber) {
+    public WallEntity convertWall(WallDTO dto, int floorNumber) {
         WallEntity entity = new WallEntity();
-        // ... (mapear atributos básicos da parede) ...
+        entity.setWallId(dto.getWallId());
+        entity.setDescription(dto.getDescription());
+        entity.setType(dto.getType());
+        entity.setLengthFoot(dto.getLengthFoot());
+        entity.setLengthInches(dto.getLengthInches());
+        entity.setHeightFoot(dto.getHeightFoot());
+        entity.setHeightInches(dto.getHeightInches());
+        entity.setWallThicknessInch(dto.getWallThicknessInch());
+        entity.setFloorNumber(floorNumber); // Definir o floorNumber na entidade
 
-        // Calcular linearFootage e squareFootage usando WallCalculationService
-        entity.setLinearFootage(wallCalculationService.calculateLinearFootage(entity));
-        entity.setSquareFootage(wallCalculationService.calculateSquareFootage(entity));
+        // Calcula as medidas da parede
+        entity.setLinearFootage(wallCalculationService.calculateLinearFootage(entity.getTotalLengthInFeet()));
+        entity.setSquareFootage(wallCalculationService.calculateSquareFootage(entity.getTotalLengthInFeet(), entity.getTotalHeightInFeet()));
 
-        // Relacionar a parede com os ambientes (usando WallRoomMapping)
+        // Relacionar a parede com os ambientes (usando WallRoomMapping) e determinar o tipo de material
         for (RoomSideDTO roomSideDTO : dto.getRoomSides()) {
             RoomEntity roomEntity = roomRepository.findByRoomTypeAndFloorNumber(
                     roomSideDTO.getRoomType(), floorNumber).orElse(null);
@@ -43,6 +51,10 @@ public class ProjectConverter {
                 mapping.setWall(entity);
                 mapping.setRoom(roomEntity);
                 mapping.setSide(roomSideDTO.getSideOfWall());
+
+                // Determinar o tipo de material da parede com base no ambiente
+                String materialType = wallCalculationService.determineMaterialType(entity, roomEntity);
+                entity.setMaterialType(materialType);
 
                 wallRoomMappingRepository.save(mapping);
             }
@@ -101,4 +113,5 @@ public class ProjectConverter {
                 dto.getPostalCode()
         );
     }
+
 }
