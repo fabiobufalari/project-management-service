@@ -34,4 +34,5 @@ public class WallDTO {
     private List<DoorDTO> doors;
 
     private int floorNumber;
+    private Double studSpacingInch;
 }

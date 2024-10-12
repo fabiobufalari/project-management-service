@@ -4,6 +4,7 @@ package com.bufalari.building.service;
 import com.bufalari.building.entity.RoomEntity;
 import com.bufalari.building.entity.WallEntity;
 import com.bufalari.building.requestDTO.RoomSideDTO;
+import com.bufalari.building.responseDTO.StudCalculationResultDTO;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,6 +34,28 @@ public class WallCalculationService {
         }
     }
 
+    // ===>>> NOVO MÉTODO PARA CÁLCULO DE STUDS: <<<===
+    public StudCalculationResultDTO calculateStuds(WallEntity wall) {
+        // 1. Obter o espaçamento dos studs
+        double studSpacing = wall.getStudSpacingInch();
+
+        // 2. Calcular a quantidade de studs
+        // Considerar studs nas extremidades e espaçamento
+        double totalLengthInInches = wall.getTotalLengthInFeet() * 12;
+        int studCount = (int) Math.ceil(totalLengthInInches / studSpacing) + 1;
+
+        // 3. Calcular a medida linear total dos studs
+        double studLinearFootage = studCount * (wall.getTotalHeightInFeet() - (wall.getNumberOfPlates() * 1.5 / 12)); // Considerar altura da placa
+
+        // 4. Criar DTO de resposta
+        StudCalculationResultDTO result = new StudCalculationResultDTO();
+        result.setWallId(wall.getWallId());
+        result.setStudCount(studCount);
+        result.setStudLinearFootage(studLinearFootage);
+
+        return result;
+    }
+
     public WallEntity performWallCalculations(WallEntity wall) {
 
         return wall;
@@ -52,4 +75,5 @@ public class WallCalculationService {
         wallEntity.setSquareFootage(calculateSquareFootage(wallEntity.getTotalLengthInFeet(), wallEntity.getTotalHeightInFeet()));
         return wallEntity;
     }
+
 }

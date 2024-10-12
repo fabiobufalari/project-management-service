@@ -41,6 +41,20 @@ public class WallEntity {
     private double squareFootage;
     private boolean isExternal;
     private int floorNumber;
+    @Column(name = "stud_count", nullable = false, columnDefinition = "integer default 0")
+    private int studCount;
+
+    @Column(name = "stud_linear_footage", nullable = false, columnDefinition = "double precision default 0.0")
+    private double studLinearFootage;
+
+    private double Length;
+    private double height;
+    private String roomSides;
+    private Integer numberOfPlates;
+    private Double studSpacingInch;
+
+    public void setMaterial(String material) {
+    }
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "wall_id")
@@ -63,12 +77,4 @@ public class WallEntity {
         return heightFoot + (heightInches / 12);
     }
 
-    public double Length;
-
-    public double height;
-    public String roomSides;
-
-
-    public void setMaterial(String material) {
-    }
 }

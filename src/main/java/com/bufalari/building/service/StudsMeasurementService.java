@@ -172,4 +172,6 @@ public class StudsMeasurementService {
 
         entity.setNumberOfStuds(numberOfStuds); // Define o número de madeiras na entidade
     }
+
+
 }

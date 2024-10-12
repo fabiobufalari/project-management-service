@@ -28,14 +28,18 @@ public class WallController {
     @Autowired
     private WallRepository wallRepository;
 
-    @PostMapping("/calculate")
-    public ResponseEntity<List<WallEntity>> calculateWall(@RequestBody List<WallDTO> wallDTOs) { // Receber uma lista de WallDTO
 
+    @PostMapping("/calculate")
+    public ResponseEntity<List<WallEntity>> calculateWall(@RequestBody List<WallDTO> wallDTOs) {
         // Converter os DTOs para entidades e calcular as medidas
         List<WallEntity> calculatedWalls = wallDTOs.stream()
                 .map(wallDTO -> {
                     int floorNumber = wallDTO.getFloorNumber();
                     WallEntity wallEntity = projectConverter.convertWall(wallDTO, floorNumber);
+
+                    // ===>>> CHAMAR calculateStuds AQUI: <<<===
+                    //wallCalculationService.calculateStuds(wallEntity);
+
                     return wallCalculationService.calculateWall(wallEntity);
                 })
                 .collect(Collectors.toList());

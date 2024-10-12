@@ -5,6 +5,7 @@ import com.bufalari.building.repository.RoomRepository;
 import com.bufalari.building.repository.WallRepository;
 import com.bufalari.building.repository.WallRoomMappingRepository;
 import com.bufalari.building.requestDTO.*;
+import com.bufalari.building.responseDTO.StudCalculationResultDTO;
 import com.bufalari.building.service.WallCalculationService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,10 @@ public class ProjectConverter {
         entity.setHeightInches(dto.getHeightInches());
         entity.setWallThicknessInch(dto.getWallThicknessInch());
         entity.setFloorNumber(floorNumber);
+        entity.setNumberOfPlates(3);
+
+        // ===>>> DEFINIR studSpacingInch AQUI: <<<===
+        entity.setStudSpacingInch(dto.getStudSpacingInch());
 
         // Calcula as medidas da parede
         entity.setLinearFootage(wallCalculationService.calculateLinearFootage(entity.getTotalLengthInFeet()));
@@ -68,6 +73,17 @@ public class ProjectConverter {
                 .map(doorConverter::toEntity)
                 .collect(Collectors.toList());
         entity.setDoors(doorEntities);
+
+        // ===>>>  CÁLCULO DOS STUDS: <<<===
+
+        // Calcular os studs DEPOIS de definir o studSpacingInch
+        StudCalculationResultDTO studResult = wallCalculationService.calculateStuds(entity);
+
+        // Adicionar resultado dos studs à WallEntity
+        entity.setStudCount(studResult.getStudCount());
+        entity.setStudLinearFootage(studResult.getStudLinearFootage());
+
+        // ===>>> FIM DO CÁLCULO DOS STUDS <<<===
 
         // Persistir a WallEntity primeiro
         entity = wallRepository.save(entity);
@@ -110,9 +126,11 @@ public class ProjectConverter {
             // Não é necessário adicionar roomEntity em entity.getRooms(), pois o mapeamento é feito por "mappedBy"
 
             // Determinar o tipo de material da parede com base no ambiente
-            String materialType = wallCalculationService.determineMaterialType(entity, roomEntity);
+            String materialType = determineWallMaterialType(entity);
             entity.setMaterialType(materialType);
         }
+
+        // ===>>> NÃO É NECESSÁRIO SALVAR A WALLENTITY NOVAMENTE AQUI <<<===
 
         // Forçar o carregamento da lista rooms
         entity.getRooms().size();
