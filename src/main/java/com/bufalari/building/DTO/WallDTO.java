@@ -20,5 +20,5 @@ public class WallDTO {
     private double wallThicknessInch;
     private List<RoomSideDTO> roomSides; // Informações sobre os cômodos em cada lado da parede
     private int floorNumber;
-    private double studSpacingInch;
+    private Double studSpacingInch;
 }

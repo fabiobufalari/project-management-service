@@ -38,14 +38,16 @@ public class WallCalculationService {
     public StudCalculationResultDTO calculateStuds(WallEntity wall) {
         // 1. Obter o espaçamento dos studs
         double studSpacing = wall.getStudSpacingInch();
-
-        // 2. Calcular a quantidade de studs
-        // Considerar studs nas extremidades e espaçamento
+        // 2. Calcular a quantidade de studs (inalterado)
         double totalLengthInInches = wall.getTotalLengthInFeet() * 12;
         int studCount = (int) Math.ceil(totalLengthInInches / studSpacing) + 1;
 
-        // 3. Calcular a medida linear total dos studs
-        double studLinearFootage = studCount * (wall.getTotalHeightInFeet() - (wall.getNumberOfPlates() * 1.5 / 12)); // Considerar altura da placa
+        // ===>>>  AJUSTE NO CÁLCULO DA METRAGEM: <<<===
+        // 3. Calcular a altura dos studs (em pés) subtraindo a altura das plates
+        double studHeightFeet = wall.getTotalHeightInFeet() - (wall.getNumberOfPlates() * 1.5 / 12);
+
+        // Calcular a medida linear total dos studs (em pés)
+        double studLinearFootage = studCount * studHeightFeet;
 
         // 4. Criar DTO de resposta
         StudCalculationResultDTO result = new StudCalculationResultDTO();

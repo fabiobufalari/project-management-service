@@ -49,9 +49,9 @@ public class ProjectConverter {
         entity.setHeightInches(dto.getHeightInches());
         entity.setWallThicknessInch(dto.getWallThicknessInch());
         entity.setFloorNumber(floorNumber);
-        entity.setNumberOfPlates(3);
+        entity.setNumberOfPlates(3); // Assuming 3 plates for now
 
-        // ===>>> DEFINIR studSpacingInch AQUI: <<<===
+        // Definir o studSpacingInch
         entity.setStudSpacingInch(dto.getStudSpacingInch());
 
         // Calcula as medidas da parede
@@ -75,17 +75,15 @@ public class ProjectConverter {
         entity.setDoors(doorEntities);
 
         // ===>>>  CÁLCULO DOS STUDS: <<<===
-
         // Calcular os studs DEPOIS de definir o studSpacingInch
         StudCalculationResultDTO studResult = wallCalculationService.calculateStuds(entity);
 
         // Adicionar resultado dos studs à WallEntity
         entity.setStudCount(studResult.getStudCount());
         entity.setStudLinearFootage(studResult.getStudLinearFootage());
-
         // ===>>> FIM DO CÁLCULO DOS STUDS <<<===
 
-        // Persistir a WallEntity primeiro
+        // Persistir a WallEntity
         entity = wallRepository.save(entity);
 
         // Relacionar a parede com os ambientes (usando WallRoomMapping)
@@ -106,9 +104,6 @@ public class ProjectConverter {
 
             // ===>>> COPIAR UUID DA ROOMENTITY PARA A WALLENTITY: <<<===
             entity.setRoomUuid(roomEntity.getUuid());
-
-            // ===>>> ATUALIZAR A WALLENTITY ANTES DE CRIAR O MAPEAMENTO: <<<===
-            entity = wallRepository.save(entity);
 
             // Criar WallRoomMapping
             WallRoomMapping mapping = new WallRoomMapping();
