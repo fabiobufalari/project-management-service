@@ -88,6 +88,12 @@ public class ProjectConverter {
                         return roomRepository.save(newRoom);
                     });
 
+            // ===>>> COPIAR UUID DA ROOMENTITY PARA A WALLENTITY: <<<===
+            entity.setRoomUuid(roomEntity.getUuid());
+
+            // ===>>> ATUALIZAR A WALLENTITY ANTES DE CRIAR O MAPEAMENTO: <<<===
+            entity = wallRepository.save(entity);
+
             // Criar WallRoomMapping
             WallRoomMapping mapping = new WallRoomMapping();
             mapping.setWall(entity);
@@ -107,8 +113,6 @@ public class ProjectConverter {
             String materialType = wallCalculationService.determineMaterialType(entity, roomEntity);
             entity.setMaterialType(materialType);
         }
-
-        // ===>>> NÃO É NECESSÁRIO SALVAR A WALLENTITY NOVAMENTE AQUI <<<===
 
         // Forçar o carregamento da lista rooms
         entity.getRooms().size();
@@ -155,18 +159,54 @@ public class ProjectConverter {
 
     private FloorEntity convertFloor(CalculationStructureDTO dto) {
         FloorEntity entity = new FloorEntity();
-        entity.setFloorId(dto.getFloorId());
-        entity.setFloorNumber(dto.getFloorNumber());
-        entity.setAreaSquareFeet(dto.getAreaSquareFeet());
-        entity.setHeated(dto.isHeated());
-        entity.setMaterial(dto.getMaterial());
-        entity.setWetArea(dto.isWetArea());
+        // ... (atribuir valores da FloorEntity a partir do DTO) ...
 
         // Converter as paredes (walls)
         List<WallEntity> walls = dto.getWalls().stream()
                 .map(wallDTO -> convertWall(wallDTO, dto.getFloorNumber()))
                 .collect(Collectors.toList());
         entity.setWalls(walls);
+
+        // ===>>> GERAR UUID PARA CADA ROOMENTITY E ASSOCIAR ÀS PAREDES: <<<===
+        for (WallDTO wallDTO : dto.getWalls()) { // Iterar pelos WallDTOs
+            for (RoomSideDTO roomSideDTO : wallDTO.getRoomSides()) { // Acessar roomSides do DTO
+                String roomType = roomSideDTO.getRoomType();
+                int floorNumber = dto.getFloorNumber(); // Obter floorNumber do dto
+
+                // Buscar a RoomEntity pelo roomType e floorNumber
+                RoomEntity roomEntity = roomRepository.findByRoomTypeAndFloorNumber(roomType, floorNumber)
+                        .orElseGet(() -> {
+                            // Se a RoomEntity não existir, criar uma nova com UUID
+                            RoomEntity newRoom = new RoomEntity();
+                            newRoom.setRoomType(roomType);
+                            newRoom.setFloorNumber(floorNumber);
+                            newRoom.setWetArea(roomSideDTO.isWetArea());
+                            newRoom.setUuid(UUID.randomUUID()); // Gerar o UUID do ambiente
+                            return roomRepository.save(newRoom);
+                        });
+
+                // ===>>> ASSOCIAR A PAREDE À ROOMENTITY: <<<===
+                // Buscar a WallEntity correspondente ao wallDTO
+                WallEntity wallEntity = wallRepository.findByWallId(wallDTO.getWallId()).orElseThrow(() -> new RuntimeException("Parede não encontrada!"));
+
+                // ===>>> COPIAR UUID DA ROOMENTITY PARA A WALLENTITY: <<<===
+                wallEntity.setRoomUuid(roomEntity.getUuid());
+
+                // ===>>> ATUALIZAR A WALLENTITY: <<<===
+                wallEntity = wallRepository.save(wallEntity); // Salvar a entidade após a atualização do roomUuid
+
+                // Criar WallRoomMapping
+                WallRoomMapping mapping = new WallRoomMapping();
+                mapping.setWall(wallEntity);
+                mapping.setRoom(roomEntity);
+                mapping.setSide(roomSideDTO.getSideOfWall());
+
+                wallRoomMappingRepository.save(mapping);
+                System.out.println("WallRoomMapping salvo com ID: " + mapping.getId());
+            }
+        }
+
+        // ... (Converter outros elementos: ceiling, baseboards, etc.) ...
 
         return entity;
     }

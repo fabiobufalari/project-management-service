@@ -24,6 +24,8 @@ public class WallEntity {
     @Column(columnDefinition = "BYTEA")
     private UUID uuid; // Atributo UUID
 
+    @Column(columnDefinition = "BYTEA")
+    private UUID roomUuid;
 
     private String wallId;
 
