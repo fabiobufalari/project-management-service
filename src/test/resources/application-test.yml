@@ -1,0 +1,24 @@
+# Path: src/test/resources/application-test.yml
+
+auth:
+  service:
+    url: http://localhost:9999 # Ou outra URL válida para teste
+
+# Adicione esta seção / Add this section
+jwt:
+  # Use a MESMA chave secreta do application.yml principal ou uma variável de ambiente
+  # Use the SAME secret key from the main application.yml or an environment variable
+  secret: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970!} # <<-- ADICIONE AQUI
+
+# Configurações do banco de dados H2 (já existentes)
+spring:
+  datasource:
+    url: jdbc:h2:mem:projectdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    # show-sql: true

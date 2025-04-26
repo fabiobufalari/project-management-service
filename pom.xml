@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.bufalari</groupId>
-	<artifactId>building-house</artifactId>
+	<artifactId>project-management-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>building-house</name>
 	<description>The &quot;Building House Objective&quot; project is a Spring Boot application designed to optimize the management and quantification of materials in construction projects. This solution aims to provide construction professionals, such as masons and carpenters, with an effective tool to track and manage project progress accurately.</description>
@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		<spring-cloud.version>2023.0.2</spring-cloud.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -78,6 +79,41 @@
 			<version>2.5</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+			<!-- Version is managed by Spring Boot parent POM -->
+			<!-- A versão é gerenciada pelo POM pai do Spring Boot -->
+		</dependency>
+		<!-- Spring Cloud OpenFeign Starter -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+			<!-- A versão geralmente é gerenciada pelo BOM do Spring Cloud -->
+			<!-- The version is usually managed by the Spring Cloud BOM -->
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.11.5</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.11.5</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -94,6 +130,26 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
 	</build>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<!-- Certifique-se de que a versão do Spring Cloud está definida nas propriedades -->
+				<!-- Make sure the Spring Cloud version is defined in properties -->
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<!-- Outras dependências gerenciadas podem estar aqui -->
+		</dependencies>
+	</dependencyManagement>
 
 </project>
