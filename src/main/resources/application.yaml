@@ -1,98 +1,84 @@
 # =========================================
-# Server Configuration / Configuração do Servidor
+# Server Configuration
 # =========================================
 server:
-  port: 8080 # Port the service will run on / Porta em que o serviço será executado
+  port: 8080 # Porta deste serviço
 
 # =========================================
-# Spring Boot Application Configuration / Configuração da Aplicação Spring Boot
+# Spring Boot Application Configuration
 # =========================================
 spring:
   application:
-    # Application name (Should match the service purpose)
-    # Nome da aplicação (Deve corresponder ao propósito do serviço)
     name: project-management-service
-
-  # =========================================
-  # Datasource Configuration (PostgreSQL) / Configuração do Datasource (PostgreSQL)
-  # =========================================
   datasource:
-    # Optional: driver-class-name is usually detected automatically by Spring Boot based on the URL
-    # Opcional: driver-class-name geralmente é detectado automaticamente pelo Spring Boot baseado na URL
-    # driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/postgres # IMPORTANT: Ensure this DB exists and is accessible / IMPORTANTE: Garanta que este BD existe e está acessível
-    username: postgres                           # Database username / Usuário do BD
-    password: postgres                           # Database password / Senha do BD
-
-  # =========================================
-  # JPA & Hibernate Configuration / Configuração JPA & Hibernate
-  # =========================================
+    url: jdbc:postgresql://localhost:5432/buildingDB # <<< BANCO CENTRALIZADO
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      # 'update': Updates the schema if necessary. Use 'validate' or 'none' in production.
-      # 'update': Atualiza o schema se necessário. Use 'validate' ou 'none' em produção.
       ddl-auto: update
-    # Optional: Show SQL statements in logs (useful for development)
-    # Opcional: Mostrar statements SQL nos logs (útil para desenvolvimento)
-    show-sql: true # Set to true to see generated SQL / Defina como true para ver o SQL gerado
+    show-sql: true
     properties:
       hibernate:
-        # Optional: Format SQL logs for better readability
-        # Opcional: Formata os logs SQL para melhor legibilidade
         format_sql: true
-        # Optional: Specify dialect if auto-detection fails (usually not needed)
-        # Opcional: Especificar dialeto se auto-detecção falhar (geralmente não necessário)
-        # dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  # =========================================
-  # SQL Initialization Configuration / Configuração de Inicialização SQL
-  # =========================================
-  # sql:
-  #   init:
-  #     # Disable automatic execution of schema.sql/data.sql when using ddl-auto: update
-  #     # Desabilita execução automática de schema.sql/data.sql ao usar ddl-auto: update
-  #     enabled: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 # =========================================
-# External Service URLs / URLs de Serviços Externos
+# External Service URLs
 # =========================================
 auth:
   service:
-    # URL of the authentication service required by AuthServiceClient
-    # URL do serviço de autenticação necessária para o AuthServiceClient
-    url: ${AUTH_SERVICE_URL:http://localhost:8083} # Default to localhost:8083 if AUTH_SERVICE_URL env var is not set / Padrão para localhost:8083 se var de ambiente AUTH_SERVICE_URL não definida
+    url: ${AUTH_SERVICE_URL:http://localhost:8083/api} # URL do Authentication Service
+# Adicionar URLs para AP/AR/Employee/etc. se/quando forem chamados por este serviço
+# payable:
+#   service:
+#     url: ${PAYABLE_SERVICE_URL:http://localhost:8088/api}
+# receivable:
+#   service:
+#     url: ${RECEIVABLE_SERVICE_URL:http://localhost:8089/api}
+# employee:
+#   service:
+#     url: ${EMPLOYEE_SERVICE_URL:http://localhost:8084/api}
 
 # =========================================
-# JWT Configuration / Configuração JWT
+# JWT Configuration (Este serviço VALIDA)
 # =========================================
-jwt:
-  # Secret key for validating JWT tokens (MUST match the key used by auth-service)
-  # Chave secreta para validar tokens JWT (DEVE ser igual à chave usada pelo auth-service)
-  # IMPORTANT: Use environment variables or a secrets manager in production!
-  # IMPORTANTE: Use variáveis de ambiente ou um gerenciador de segredos em produção!
-  secret: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970!} # Default key if env var JWT_SECRET_KEY is not set / Chave padrão se var env JWT_SECRET_KEY não definida
+security:
+  jwt:
+    token:
+      secret-key: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970!} # <<< CHAVE IDÊNTICA
 
 # =========================================
-# Logging Configuration (Example) / Configuração de Logging (Exemplo)
+# Logging Configuration
 # =========================================
 logging:
   level:
     org.springframework.web: INFO
-    org.springframework.security: INFO # Set to DEBUG for detailed security logs / Defina como DEBUG para logs detalhados de segurança
-    com.bufalari.building: DEBUG  # Your application's base package / Pacote base da sua aplicação
-    org.hibernate.SQL: DEBUG # Set to DEBUG to see SQL statements / Defina como DEBUG para ver statements SQL
-    org.hibernate.type.descriptor.sql: TRACE # Set to TRACE to see SQL parameters / Defina como TRACE para ver parâmetros SQL
+    org.springframework.security: INFO
+    com.bufalari.building: DEBUG # Pacote raiz deste serviço (confirmar pacote)
+    org.hibernate.SQL: DEBUG
 
 # =========================================
-# Swagger/OpenAPI Configuration (Example) / Configuração Swagger/OpenAPI (Exemplo)
+# Swagger/OpenAPI Configuration
 # =========================================
 springdoc:
   api-docs:
-    path: /v3/api-docs # Path for the OpenAPI specification JSON/YAML / Caminho para a especificação OpenAPI JSON/YAML
+    path: /v3/api-docs
   swagger-ui:
-    path: /swagger-ui.html # Path for the Swagger UI / Caminho para a UI do Swagger
-    display-request-duration: true # Show request duration / Mostrar duração da requisição
-    operations-sorter: method # Sort operations alphabetically by HTTP method / Ordenar operações alfabeticamente por método HTTP
-  # Default produces/consumes media type / Tipo de mídia padrão de produção/consumo
+    path: /swagger-ui.html
+    operations-sorter: method
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+# =========================================
+# Actuator Configuration
+# =========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: when_authorized
