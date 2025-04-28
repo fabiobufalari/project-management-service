@@ -30,7 +30,7 @@ public class JwtUtil {
 
     // Inject the secret key from application properties
     // Injeta a chave secreta das propriedades da aplicação
-    @Value("${jwt.secret}") // Make sure this property exists in application.yml/properties
+    @Value("${security.jwt.token.secret-key}")// Make sure this property exists in application.yml/properties
     private String configuredSecretKey;
 
     private SecretKey secretKey; // Use SecretKey type
