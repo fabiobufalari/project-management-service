@@ -8,10 +8,20 @@ import org.springframework.stereotype.Component;
 public class BaseboardConverter {
 
     public BaseboardEntity toEntity(BaseboardDTO dto) {
-        BaseboardEntity entity = new BaseboardEntity();
-        entity.setMaterial(dto.getMaterial());
-        entity.setHeightInches(dto.getHeightInches());
-        entity.setPaintColor(dto.getPaintColor());
-        return entity;
+        if (dto == null) return null;
+        return BaseboardEntity.builder()
+                .material(dto.getMaterial())
+                .heightInches(dto.getHeightInches())
+                .paintColor(dto.getPaintColor())
+                .build();
+    }
+
+    public BaseboardDTO toDto(BaseboardEntity entity) {
+        if (entity == null) return null;
+        return new BaseboardDTO(
+                entity.getMaterial(),
+                entity.getHeightInches(),
+                entity.getPaintColor()
+        );
     }
 }

@@ -1,155 +1,124 @@
 package com.bufalari.building.entity;
 
 import com.bufalari.building.auditing.AuditableBaseEntity;
-import com.bufalari.building.enums.ProjectStatus;      // Import status enum
+import com.bufalari.building.enums.ProjectStatus;
 import jakarta.persistence.*;
-import lombok.*; // Use consistent Lombok annotations
+import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList; // Importar
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Entity representing a construction project with financial and management details.
- * Entidade que representa um projeto de construção com detalhes financeiros e de gerenciamento.
- */
 @Entity
-@Getter                 // Use individual annotations for better control
+@Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder                // Add Builder pattern
-@Table(name = "projects") // Plural table name convention
-public class ProjectEntity extends AuditableBaseEntity { // Inherit auditing fields
+@Builder
+@Table(name = "projects", indexes = {
+    @Index(name = "idx_project_name", columnList = "projectName"),
+    @Index(name = "idx_project_client_id", columnList = "client_id"),
+    @Index(name = "idx_project_status", columnList = "status")
+})
+public class ProjectEntity extends AuditableBaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@GeneratedValue(generator = "UUID")
+	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+	@Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+	private UUID id; // <<<--- UUID
 
-    /**
-     * User-friendly name for the project.
-     * Nome amigável para o projeto.
-     */
+    @Column(name = "project_id_legacy") // Mantém o ID Long legado, se necessário
+    private Long projectIdLegacy;
+
     @Column(nullable = false, length = 200)
     private String projectName;
 
-    /**
-     * Date and time the project record was initially created or registered in the system.
-     * Data e hora em que o registro do projeto foi inicialmente criado ou registrado no sistema.
-     */
-    private LocalDateTime dateTime; // Consider renaming to registrationDateTime for clarity
+    private LocalDateTime dateTime; // Data de registro/criação do projeto
 
-    /**
-     * Type of building being constructed (e.g., House, Apartment Building, Renovation).
-     * Tipo de edificação sendo construída (ex: Casa, Prédio de Apartamentos, Reforma).
-     */
     @Column(length = 100)
     private String buildingType;
 
-    /**
-     * Total number of floors in the building, including basement if applicable.
-     * Número total de andares na edificação, incluindo subsolo se aplicável.
-     */
     private int numberOfFloors;
-
-    /**
-     * Indicates if the project includes a basement.
-     * Indica se o projeto inclui um subsolo.
-     */
     private boolean hasBasement;
 
-    /**
-     * The planned budget amount for the project.
-     * O valor do orçamento planejado para o projeto.
-     */
-    @Column(precision = 15, scale = 2) // Use appropriate precision for monetary values
+    @Column(precision = 15, scale = 2)
     private BigDecimal budgetAmount;
 
-    /**
-     * Currency code for the budget (e.g., CAD, USD, BRL).
-     * Código da moeda para o orçamento (ex: CAD, USD, BRL).
-     */
     @Column(length = 3)
     private String currency;
 
-    /**
-     * Planned start date of the project.
-     * Data de início planejada do projeto.
-     */
     private LocalDate startDatePlanned;
-
-    /**
-     * Planned end date of the project.
-     * Data de término planejada do projeto.
-     */
     private LocalDate endDatePlanned;
-
-    /**
-     * Actual start date of the project.
-     * Data de início real do projeto.
-     */
     private LocalDate startDateActual;
-
-    /**
-     * Actual end date of the project.
-     * Data de término real do projeto.
-     */
     private LocalDate endDateActual;
 
-    /**
-     * Current status of the project.
-     * Status atual do projeto.
-     */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20) // Ensure length accommodates enum names
+    @Column(nullable = false, length = 20)
     private ProjectStatus status;
 
-    /**
-     * Identifier of the client associated with this project (linking to client service).
-     * Identificador do cliente associado a este projeto (ligando ao serviço de clientes).
-     */
-    @Column(name = "client_id") // Store as UUID if client service uses UUIDs
-    private UUID clientId;
+    @Column(name = "client_id", columnDefinition = "uuid") // Cliente associado
+    private UUID clientId; // <<<--- UUID (assumindo que ClientService usa UUID)
 
-    /**
-     * Identifier of the company branch responsible for the project (linking to company service).
-     * Identificador da filial da empresa responsável pelo projeto (ligando ao serviço da empresa).
-     */
-    @Column(name = "company_branch_id")
-    private Long companyBranchId; // Assuming company service uses Long IDs
+    @Column(name = "company_branch_id") // Filial da empresa
+    private Long companyBranchId; // Mantém Long (ou UUID se CompanyService usar UUID)
 
-    // --- Relationships ---
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_project_location"))
+    private LocationEntity locationEntity;
 
-    /**
-     * Location details of the project site.
-     * Detalhes da localização do local do projeto.
-     */
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY) // Cascade ALL if location is fully owned by project
-    @JoinColumn(name = "location_id", referencedColumnName = "id")
-    private LocationEntity locationEntity; // Keep the entity relationship
-
-    /**
-     * List of owners associated with the project (can be multiple clients or stakeholders).
-     * Lista de proprietários associados ao projeto (podem ser múltiplos clientes ou partes interessadas).
-     */
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<HouseOwner> owners; // Consider renaming HouseOwner if it represents more than just house ownership
+    @Builder.Default
+    private List<HouseOwner> owners = new ArrayList<>();
 
-    /**
-     * List of floors belonging to this project.
-     * Lista de andares pertencentes a este projeto.
-     */
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<FloorEntity> floors;
+    @Builder.Default
+    private List<FloorEntity> floors = new ArrayList<>();
 
-     /**
-     * List of references (IDs/URLs) to documents stored in the document-storage-service.
-     * Lista de referências (IDs/URLs) para documentos armazenados no document-storage-service.
-     */
-    @ElementCollection(fetch = FetchType.LAZY) // Use ElementCollection for simple lists of strings
-    @CollectionTable(name = "project_document_references", joinColumns = @JoinColumn(name = "project_id"))
-    @Column(name = "document_reference")
-    private List<String> documentReferences;
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "project_document_references",
+                     joinColumns = @JoinColumn(name = "project_id", foreignKey = @ForeignKey(name = "fk_projdoc_project")))
+    @Column(name = "document_reference", length = 500) // Aumentar tamanho se URLs longas
+    @Builder.Default
+    private List<String> documentReferences = new ArrayList<>();
+
+    // --- Métodos auxiliares para gerenciar relações bidirecionais ---
+    public void addFloor(FloorEntity floor) {
+        if (floor != null) {
+            if (this.floors == null) this.floors = new ArrayList<>();
+            this.floors.add(floor);
+            floor.setProject(this);
+        }
+    }
+    public void removeFloor(FloorEntity floor) {
+        if (floor != null && this.floors != null) {
+            this.floors.remove(floor);
+            floor.setProject(null);
+        }
+    }
+    public void addOwner(HouseOwner owner) {
+        if (owner != null) {
+            if (this.owners == null) this.owners = new ArrayList<>();
+            this.owners.add(owner);
+            owner.setProject(this);
+        }
+    }
+    // ... (outros métodos auxiliares conforme necessário)
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || !(o instanceof ProjectEntity that)) return false;
+        return id != null && Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? Objects.hash(id) : getClass().hashCode();
+    }
 }

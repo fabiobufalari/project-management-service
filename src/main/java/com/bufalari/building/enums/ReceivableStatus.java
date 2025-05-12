@@ -1,4 +1,4 @@
-package com.bufalari.building.receivable.enums;
+package com.bufalari.building.enums;
 
 public enum ReceivableStatus {
     PENDING("Pending", "Pendente"),
@@ -6,7 +6,8 @@ public enum ReceivableStatus {
     PARTIALLY_RECEIVED("Partially Received", "Parcialmente Recebido"),
     OVERDUE("Overdue", "Atrasado"),
     IN_DISPUTE("In Dispute", "Em Disputa"),
-    CANCELED("Canceled", "Cancelado"); // Or WRITTEN_OFF / Baixado
+    CANCELED("Canceled", "Cancelado"),
+    WRITTEN_OFF("Written Off", "Baixado"); // Adicionado se usado no DTO
 
     private final String descriptionEn;
     private final String descriptionPt;

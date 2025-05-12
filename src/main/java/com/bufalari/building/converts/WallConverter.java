@@ -1,21 +1,32 @@
 package com.bufalari.building.converts;
 
-import com.bufalari.building.entity.DoorEntity;
+import com.bufalari.building.entity.DoorEntity; // Mantido
 import com.bufalari.building.entity.WallEntity;
-import com.bufalari.building.entity.WindowEntity;
-import com.bufalari.building.requestDTO.DoorDTO;
-import com.bufalari.building.requestDTO.WallDTO;
-import com.bufalari.building.requestDTO.WindowDTO;
+import com.bufalari.building.entity.WindowEntity; // Mantido
+import com.bufalari.building.requestDTO.DoorDTO; // Usar requestDTO
+import com.bufalari.building.requestDTO.RoomSideDTO; // Usar requestDTO.RoomSideDTO
+import com.bufalari.building.requestDTO.WallDTO; // Usar requestDTO.WallDTO
+import com.bufalari.building.requestDTO.WindowDTO; // Usar requestDTO
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.ArrayList;
+// import java.util.List; // Não é mais necessário se as listas são inicializadas
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class WallConverter {
 
-    public WallEntity toEntity(WallDTO dto) {
+    private final WindowConverter windowConverter; // Assume que WindowConverter retorna requestDTO.WindowDTO
+    private final DoorConverter doorConverter;   // Assume que DoorConverter retorna requestDTO.DoorDTO
+
+    public WallEntity toEntity(WallDTO dto) { // Renomeado de requestDtoToEntity para clareza
+        if (dto == null) return null;
+
         WallEntity entity = new WallEntity();
+        // ID da entidade será definido ao salvar ou se dto.getWallUuid() for usado para update
+        entity.setId(dto.getWallUuid());
         entity.setWallId(dto.getWallId());
         entity.setDescription(dto.getDescription());
         entity.setType(dto.getType());
@@ -24,44 +35,67 @@ public class WallConverter {
         entity.setHeightFoot(dto.getHeightFoot());
         entity.setHeightInches(dto.getHeightInches());
         entity.setWallThicknessInch(dto.getWallThicknessInch());
-        entity.setMaterial(dto.getMaterial());
+        entity.setFloorNumber(dto.getFloorNumber());
+        entity.setNumberOfPlates(dto.getNumberOfPlates() != null ? dto.getNumberOfPlates() : 3); // Default se nulo
+        entity.setStudSpacingInch(dto.getStudSpacingInch());
+        // Project será associado no serviço
+        // RoomMappings serão criados no serviço
 
         if (dto.getWindows() != null) {
-            List<WindowEntity> windows = dto.getWindows().stream()
-                .map(this::convertWindow)
-                .collect(Collectors.toList());
-            entity.setWindows(windows);
+            entity.setWindows(dto.getWindows().stream()
+                .map(windowConverter::toEntity) // WindowConverter.toEntity(WindowDTO)
+                .collect(Collectors.toList()));
+        } else {
+            entity.setWindows(new ArrayList<>());
         }
-
         if (dto.getDoors() != null) {
-            List<DoorEntity> doors = dto.getDoors().stream()
-                .map(this::convertDoor)
-                .collect(Collectors.toList());
-            entity.setDoors(doors);
+            entity.setDoors(dto.getDoors().stream()
+                .map(doorConverter::toEntity) // DoorConverter.toEntity(DoorDTO)
+                .collect(Collectors.toList()));
+        } else {
+            entity.setDoors(new ArrayList<>());
+        }
+        return entity;
+    }
+
+    public WallDTO toDto(WallEntity entity) { // Renomeado de entityToResponseDto
+        if (entity == null) return null;
+        WallDTO dto = new WallDTO();
+        dto.setWallUuid(entity.getId()); // ID da entidade
+        dto.setWallId(entity.getWallId());
+        dto.setDescription(entity.getDescription());
+        dto.setType(entity.getType());
+        dto.setLengthFoot(entity.getLengthFoot());
+        dto.setLengthInches(entity.getLengthInches());
+        dto.setHeightFoot(entity.getHeightFoot());
+        dto.setHeightInches(entity.getHeightInches());
+        dto.setWallThicknessInch(entity.getWallThicknessInch());
+        dto.setFloorNumber(entity.getFloorNumber());
+        dto.setNumberOfPlates(entity.getNumberOfPlates());
+        dto.setStudSpacingInch(entity.getStudSpacingInch());
+        dto.setMaterialType(entity.getMaterialType());
+
+        if (entity.getWindows() != null) {
+            dto.setWindows(entity.getWindows().stream()
+                .map(windowConverter::toDto) // WindowConverter.toDto(WindowEntity)
+                .collect(Collectors.toList()));
+        }
+        if (entity.getDoors() != null) {
+            dto.setDoors(entity.getDoors().stream()
+                .map(doorConverter::toDto) // DoorConverter.toDto(DoorEntity)
+                .collect(Collectors.toList()));
         }
 
-        return entity;
-    }
-
-    private WindowEntity convertWindow(WindowDTO dto) {
-        WindowEntity entity = new WindowEntity();
-        entity.setWindowId(dto.getWindowId());
-        entity.setWidthFoot(dto.getDimensions().getWidthFoot());
-        entity.setWidthInches(dto.getDimensions().getWidthInches());
-        entity.setHeightFoot(dto.getDimensions().getHeightFoot());
-        entity.setHeightInches(dto.getDimensions().getHeightInches());
-        entity.setThicknessInch(dto.getDimensions().getThicknessInch());
-        return entity;
-    }
-
-    private DoorEntity convertDoor(DoorDTO dto) {
-        DoorEntity entity = new DoorEntity();
-        entity.setDoorId(dto.getDoorId());
-        entity.setWidthFoot(dto.getDimensions().getWidthFoot());
-        entity.setWidthInches(dto.getDimensions().getWidthInches());
-        entity.setHeightFoot(dto.getDimensions().getHeightFoot());
-        entity.setHeightInches(dto.getDimensions().getHeightInches());
-        entity.setThicknessInch(dto.getDimensions().getThicknessInch());
-        return entity;
+        if (entity.getRoomMappings() != null) {
+            dto.setRoomSides(entity.getRoomMappings().stream()
+                .map(mapping -> new RoomSideDTO( // Mapeando para requestDTO.RoomSideDTO
+                        mapping.getRoom().getRoomType(), // roomName (seria roomType)
+                        mapping.getRoom().isWetArea(),
+                        mapping.getSide(),
+                        mapping.getRoom().getRoomType() // roomType
+                ))
+                .collect(Collectors.toList()));
+        }
+        return dto;
     }
 }

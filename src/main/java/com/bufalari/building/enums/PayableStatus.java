@@ -1,12 +1,12 @@
-// Path: accounts-payable-service/src/main/java/com/bufalari/payable/enums/PayableStatus.java
-package com.bufalari.building.payable.enums;
+package com.bufalari.building.enums;
 
 public enum PayableStatus {
     PENDING("Pending", "Pendente"),
     PAID("Paid", "Pago"),
     PARTIALLY_PAID("Partially Paid", "Parcialmente Pago"),
     OVERDUE("Overdue", "Atrasado"),
-    CANCELED("Canceled", "Cancelado");
+    CANCELED("Canceled", "Cancelado"),
+    IN_NEGOTIATION("In Negotiation", "Em Negociação"); // Adicionado se usado no DTO
 
     private final String descriptionEn;
     private final String descriptionPt;

@@ -1,25 +1,41 @@
 package com.bufalari.building;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.security.SecuritySchemes;
+import io.swagger.v3.oas.annotations.servers.Server;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.openfeign.EnableFeignClients; // Keep if calling other services / Mantenha se for chamar outros serviços
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
-/**
- * Main application class for the Project Management Service.
- * Handles project details, structure, budget, status, and links to costs/revenues.
- * Classe principal da aplicação para o Serviço de Gerenciamento de Projetos.
- * Gerencia detalhes do projeto, estrutura, orçamento, status e links para custos/receitas.
- */
 @SpringBootApplication
-// Enable Feign client capability if this service needs to call others (e.g., auth, client, supplier)
-// Habilita a capacidade de cliente Feign se este serviço precisar chamar outros (ex: auth, client, supplier)
-@EnableFeignClients // Add basePackages = "com.bufalari.building.client" if your clients are in a specific package
-// @EnableJpaAuditing // REMOVED: Auditing is now configured in JpaAuditingConfig / REMOVIDO: Auditoria agora é configurada em JpaAuditingConfig
-public class ProjectManagementServiceApplication { // <<--- RENAMED CLASS / CLASSE RENOMEADA ---<<<
+@EnableFeignClients(basePackages = "com.bufalari.building.client")
+@OpenAPIDefinition(
+        info = @Info(
+                title = "Project Management API",
+                version = "v1.0",
+                description = "API for managing construction projects, their structure, and related data."
+        ),
+        security = { @SecurityRequirement(name = "bearerAuth") },
+        servers = { @Server(url = "/", description = "Default Server URL") }
+)
+@SecuritySchemes({
+        @SecurityScheme(
+                name = "bearerAuth",
+                type = SecuritySchemeType.HTTP,
+                scheme = "bearer",
+                bearerFormat = "JWT",
+                in = SecuritySchemeIn.HEADER,
+                description = "JWT Authorization header using the Bearer scheme. Example: 'Authorization: Bearer {token}'"
+        )
+})
+public class ProjectManagementServiceApplication {
 
 	public static void main(String[] args) {
-		// Run the Spring Boot application, referencing the renamed class
-		// Executa a aplicação Spring Boot, referenciando a classe renomeada
 		SpringApplication.run(ProjectManagementServiceApplication.class, args);
 	}
 

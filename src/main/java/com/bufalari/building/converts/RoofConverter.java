@@ -8,12 +8,24 @@ import org.springframework.stereotype.Component;
 public class RoofConverter {
 
     public RoofEntity toEntity(RoofDTO dto) {
-        RoofEntity entity = new RoofEntity();
-        entity.setMaterial(dto.getMaterial());
-        entity.setAreaSquareFeet(dto.getAreaSquareFeet());
-        entity.setSlopeDegree(dto.getSlopeDegree());
-        entity.setStructureType(dto.getStructureType());
-        entity.setInsulationRValue(dto.getInsulationRValue());
-        return entity;
+        if (dto == null) return null;
+        return RoofEntity.builder()
+                .material(dto.getMaterial())
+                .areaSquareFeet(dto.getAreaSquareFeet())
+                .slopeDegree(dto.getSlopeDegree())
+                .structureType(dto.getStructureType())
+                .insulationRValue(dto.getInsulationRValue())
+                .build();
+    }
+
+    public RoofDTO toDto(RoofEntity entity) {
+        if (entity == null) return null;
+        return new RoofDTO(
+                entity.getMaterial(),
+                entity.getAreaSquareFeet(),
+                entity.getSlopeDegree(),
+                entity.getStructureType(),
+                entity.getInsulationRValue()
+        );
     }
 }

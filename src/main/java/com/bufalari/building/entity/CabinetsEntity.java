@@ -1,24 +1,44 @@
 package com.bufalari.building.entity;
 
+import com.bufalari.building.auditing.AuditableBaseEntity; // Assumindo auditável
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.Objects;
+import java.util.UUID;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CabinetsEntity {
+@Builder
+@Table(name = "cabinets") // Nome de tabela
+public class CabinetsEntity extends AuditableBaseEntity { // Auditável
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@GeneratedValue(generator = "UUID")
+	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+	@Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+	private UUID id; // <<<--- UUID
 
+    @Column(length = 100)
     private String material;
+    @Column(length = 50)
     private String color;
+
+    // Adicionar mais campos se necessário (ex: tipo, dimensões, quantidade)
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || !(o instanceof CabinetsEntity that)) return false;
+        return id != null && Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? Objects.hash(id) : getClass().hashCode();
+    }
 }

@@ -14,32 +14,48 @@ import org.springframework.stereotype.Component;
 public class BathroomAccessoriesConverter {
 
     public BathroomAccessoriesEntity toEntity(BathroomAccessoriesDTO dto) {
+        if (dto == null) return null;
         BathroomAccessoriesEntity entity = new BathroomAccessoriesEntity();
-        entity.setShower(convertShower(dto.getShower()));
-        entity.setSink(convertSink(dto.getSink()));
-        entity.setToilet(convertToilet(dto.getToilet()));
+        if (dto.getShower() != null) entity.setShower(convertShowerDtoToEntity(dto.getShower()));
+        if (dto.getSink() != null) entity.setSink(convertSinkDtoToEntity(dto.getSink()));
+        if (dto.getToilet() != null) entity.setToilet(convertToiletDtoToEntity(dto.getToilet()));
         return entity;
     }
 
-    private ShowerEntity convertShower(ShowerDTO dto) {
-        ShowerEntity entity = new ShowerEntity();
-        entity.setType(dto.getType());
-        entity.setMaterial(dto.getMaterial());
-        entity.setHeightFoot(dto.getHeightFoot());
-        return entity;
+    public BathroomAccessoriesDTO toDto(BathroomAccessoriesEntity entity) {
+        if (entity == null) return null;
+        BathroomAccessoriesDTO dto = new BathroomAccessoriesDTO();
+        if (entity.getShower() != null) dto.setShower(convertShowerEntityToDto(entity.getShower()));
+        if (entity.getSink() != null) dto.setSink(convertSinkEntityToDto(entity.getSink()));
+        if (entity.getToilet() != null) dto.setToilet(convertToiletEntityToDto(entity.getToilet()));
+        return dto;
     }
 
-    private SinkEntity convertSink(SinkDTO dto) {
-        SinkEntity entity = new SinkEntity();
-        entity.setMaterial(dto.getMaterial());
-        entity.setFaucetMaterial(dto.getFaucetMaterial());
-        return entity;
+    // --- Métodos auxiliares de conversão ---
+    private ShowerEntity convertShowerDtoToEntity(ShowerDTO dto) {
+        if (dto == null) return null;
+        return ShowerEntity.builder().type(dto.getType()).material(dto.getMaterial()).heightFoot(dto.getHeightFoot()).build();
+    }
+    private ShowerDTO convertShowerEntityToDto(ShowerEntity entity) {
+        if (entity == null) return null;
+        return new ShowerDTO(entity.getType(), entity.getMaterial(), entity.getHeightFoot());
     }
 
-    private ToiletEntity convertToilet(ToiletDTO dto) {
-        ToiletEntity entity = new ToiletEntity();
-        entity.setType(dto.getType());
-        entity.setMaterial(dto.getMaterial());
-        return entity;
+    private SinkEntity convertSinkDtoToEntity(SinkDTO dto) {
+        if (dto == null) return null;
+        return SinkEntity.builder().material(dto.getMaterial()).faucetMaterial(dto.getFaucetMaterial()).build();
+    }
+    private SinkDTO convertSinkEntityToDto(SinkEntity entity) {
+        if (entity == null) return null;
+        return new SinkDTO(entity.getMaterial(), entity.getFaucetMaterial());
+    }
+
+    private ToiletEntity convertToiletDtoToEntity(ToiletDTO dto) {
+        if (dto == null) return null;
+        return ToiletEntity.builder().type(dto.getType()).material(dto.getMaterial()).build();
+    }
+    private ToiletDTO convertToiletEntityToDto(ToiletEntity entity) {
+        if (entity == null) return null;
+        return new ToiletDTO(entity.getType(), entity.getMaterial());
     }
 }

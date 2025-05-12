@@ -8,14 +8,28 @@ import org.springframework.stereotype.Component;
 public class BalconyConverter {
 
     public BalconyEntity toEntity(BalconyDTO dto) {
-        BalconyEntity entity = new BalconyEntity();
-        entity.setHasBalcony(dto.isHasBalcony());
-        entity.setBalconyAreaSquareFeet(dto.getBalconyAreaSquareFeet());
-        entity.setRailingMaterial(dto.getRailingMaterial());
-        entity.setFloorMaterial(dto.getFloorMaterial());
-        entity.setStructureType(dto.getStructureType());
-        entity.setEstimatedCostPerSquareFoot(dto.getEstimatedCostPerSquareFoot());
-        entity.setTotalEstimatedCost(dto.getTotalEstimatedCost());
-        return entity;
+        if (dto == null) return null;
+        return BalconyEntity.builder()
+                .hasBalcony(dto.isHasBalcony())
+                .balconyAreaSquareFeet(dto.getBalconyAreaSquareFeet())
+                .railingMaterial(dto.getRailingMaterial())
+                .floorMaterial(dto.getFloorMaterial())
+                .structureType(dto.getStructureType())
+                .estimatedCostPerSquareFoot(dto.getEstimatedCostPerSquareFoot())
+                .totalEstimatedCost(dto.getTotalEstimatedCost())
+                .build();
+    }
+
+    public BalconyDTO toDto(BalconyEntity entity) {
+        if (entity == null) return null;
+        return new BalconyDTO(
+                entity.isHasBalcony(),
+                entity.getBalconyAreaSquareFeet(),
+                entity.getRailingMaterial(),
+                entity.getFloorMaterial(),
+                entity.getStructureType(),
+                entity.getEstimatedCostPerSquareFoot(),
+                entity.getTotalEstimatedCost()
+        );
     }
 }

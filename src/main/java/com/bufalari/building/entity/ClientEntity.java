@@ -1,28 +1,52 @@
 package com.bufalari.building.entity;
 
-import com.bufalari.building.DTO.ClientContactInfoDTO;
+// import com.bufalari.building.DTO.ClientContactInfoDTO; // Removido, DTO não deve ser embutido
+import com.bufalari.building.auditing.AuditableBaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+// import org.hibernate.annotations.GenericGenerator; // Não mais necessário com GenerationType.UUID
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientEntity {
+@Builder
+@Table(name = "clients", indexes = {
+    @Index(name = "idx_client_name", columnList = "clientName")
+})
+public class ClientEntity extends AuditableBaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    private UUID id;
 
+    @Column(nullable = false, length = 200)
     private String clientName;
 
-    @Embedded
-    private ClientContactInfoDTO contactInfo;
+    @Embedded // Informações de contato embutidas
+    private ClientContactInfoEmbeddable contactInfo; // <<< CORRIGIDO para Embeddable
 
-    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
-    private List<HouseOwner> houseOwners;
+    @OneToMany(mappedBy = "client", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<HouseOwner> projectOwnerships = new ArrayList<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false; // Verificação de tipo mais precisa
+        ClientEntity that = (ClientEntity) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id); // Apenas ID se for único após persistência
+    }
 }

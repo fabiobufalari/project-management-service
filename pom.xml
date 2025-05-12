@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -11,8 +11,8 @@
 	<groupId>com.bufalari</groupId>
 	<artifactId>project-management-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>building-house</name>
-	<description>The &quot;Building House Objective&quot; project is a Spring Boot application designed to optimize the management and quantification of materials in construction projects. This solution aims to provide construction professionals, such as masons and carpenters, with an effective tool to track and manage project progress accurately.</description>
+	<name>project-management-service</name> <!-- Nome do artefato -->
+	<description>The "Building House Objective" project is a Spring Boot application designed to optimize the management and quantification of materials in construction projects. This solution aims to provide construction professionals, such as masons and carpenters, with an effective tool to track and manage project progress accurately.</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -39,6 +39,18 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId> <!-- Adicionado para validação -->
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -56,42 +68,8 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!-- Jakarta Validation API (Bean Validation) -->
-		<dependency>
-			<groupId>jakarta.validation</groupId>
-			<artifactId>jakarta.validation-api</artifactId>
-			<version>3.0.2</version>
-		</dependency>
-		<!-- Hibernate Validator for Bean Validation -->
-		<dependency>
-			<groupId>org.hibernate.validator</groupId>
-			<artifactId>hibernate-validator</artifactId>
-			<version>8.0.1.Final</version> <!-- Verifique a versão mais recente -->
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-			<!-- Version is managed by Spring Boot parent POM -->
-			<!-- A versão é gerenciada pelo POM pai do Spring Boot -->
-		</dependency>
-		<!-- Spring Cloud OpenFeign Starter -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-openfeign</artifactId>
-			<!-- A versão geralmente é gerenciada pelo BOM do Spring Cloud -->
-			<!-- The version is usually managed by the Spring Cloud BOM -->
-		</dependency>
+
+		<!-- JWT Dependencies -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
@@ -109,12 +87,41 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- Swagger/OpenAPI -->
+		<dependency>
+			<groupId>org.springdoc</groupId> <!-- Alterado para springdoc-openapi -->
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.5.0</version> <!-- Verifique a versão mais recente compatível -->
+		</dependency>
+		<!-- io.swagger.core.v3 swagger-annotations já é transitiva do springdoc ou pode ser gerenciada -->
+
+		<!-- Test Dependencies -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Removido javax.servlet:servlet-api, pois o Spring Boot 3 usa Jakarta EE 9+ -->
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -137,19 +144,4 @@
 			</resource>
 		</resources>
 	</build>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-dependencies</artifactId>
-				<!-- Certifique-se de que a versão do Spring Cloud está definida nas propriedades -->
-				<!-- Make sure the Spring Cloud version is defined in properties -->
-				<version>${spring-cloud.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<!-- Outras dependências gerenciadas podem estar aqui -->
-		</dependencies>
-	</dependencyManagement>
-
 </project>

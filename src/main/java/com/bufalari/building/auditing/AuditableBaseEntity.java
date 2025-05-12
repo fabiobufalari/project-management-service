@@ -1,4 +1,3 @@
-
 package com.bufalari.building.auditing;
 
 import jakarta.persistence.Column;

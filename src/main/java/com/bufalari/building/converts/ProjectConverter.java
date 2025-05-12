@@ -1,237 +1,136 @@
 package com.bufalari.building.converts;
 
-import com.bufalari.building.entity.*;
-import com.bufalari.building.repository.RoomRepository;
-import com.bufalari.building.repository.WallRepository;
-import com.bufalari.building.repository.WallRoomMappingRepository;
-import com.bufalari.building.requestDTO.*;
-import com.bufalari.building.responseDTO.StudCalculationResultDTO;
-import com.bufalari.building.service.WallCalculationService;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.bufalari.building.entity.LocationEntity;
+import com.bufalari.building.entity.ProjectEntity;
+import com.bufalari.building.enums.ProjectStatus;
+import com.bufalari.building.requestDTO.LocationDTO;
+import com.bufalari.building.requestDTO.ProjectInfoDTO;
+import com.bufalari.building.responseDTO.FloorResponseDTO; // Import correto
+import com.bufalari.building.responseDTO.ProjectDetailResponseDTO;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class ProjectConverter {
 
-    @Autowired
-    private WallCalculationService wallCalculationService;
+    private static final Logger log = LoggerFactory.getLogger(ProjectConverter.class);
 
-    @Autowired
-    private RoomRepository roomRepository;
+    private final LocationConverter locationConverter;
+    private final FloorConverter floorConverter;
 
-    @Autowired
-    private WallRoomMappingRepository wallRoomMappingRepository;
+    public ProjectEntity requestDtoToEntity(ProjectInfoDTO dto) {
+        if (dto == null) return null;
+        log.debug("Convertendo ProjectInfoDTO para ProjectEntity: {}", dto.getProjectName());
 
-    @Autowired
-    private WallRepository wallRepository;
-
-    @Autowired
-    private WindowConverter windowConverter;
-
-    @Autowired
-    private DoorConverter doorConverter;
-
-    @Transactional
-    public WallEntity convertWall(WallDTO dto, int floorNumber) {
-        WallEntity entity = new WallEntity();
-        entity.setWallId(dto.getWallId());
-        entity.setDescription(dto.getDescription());
-        entity.setType(dto.getType());
-        entity.setLengthFoot(dto.getLengthFoot());
-        entity.setLengthInches(dto.getLengthInches());
-        entity.setHeightFoot(dto.getHeightFoot());
-        entity.setHeightInches(dto.getHeightInches());
-        entity.setWallThicknessInch(dto.getWallThicknessInch());
-        entity.setFloorNumber(floorNumber);
-        entity.setNumberOfPlates(3); // Assuming 3 plates for now
-
-        // Definir o studSpacingInch
-        entity.setStudSpacingInch(dto.getStudSpacingInch());
-
-        // Calcula as medidas da parede
-        entity.setLinearFootage(wallCalculationService.calculateLinearFootage(entity.getTotalLengthInFeet()));
-        entity.setSquareFootage(wallCalculationService.calculateSquareFootage(entity.getTotalLengthInFeet(), entity.getTotalHeightInFeet()));
-
-        // Gerar um novo UUID para a WallEntity
-        UUID newUuid = UUID.randomUUID();
-        entity.setUuid(newUuid);
-
-        // Converter as janelas
-        List<WindowEntity> windowEntities = dto.getWindows().stream()
-                .map(windowConverter::toEntity)
-                .collect(Collectors.toList());
-        entity.setWindows(windowEntities);
-
-        // Converter as portas
-        List<DoorEntity> doorEntities = dto.getDoors().stream()
-                .map(doorConverter::toEntity)
-                .collect(Collectors.toList());
-        entity.setDoors(doorEntities);
-
-        // ===>>>  CÁLCULO DOS STUDS: <<<===
-        // Calcular os studs DEPOIS de definir o studSpacingInch
-        StudCalculationResultDTO studResult = wallCalculationService.calculateStuds(entity);
-
-        // Adicionar resultado dos studs à WallEntity
-        entity.setStudCount(studResult.getStudCount());
-        entity.setStudLinearFootage(studResult.getStudLinearFootage());
-        // ===>>> FIM DO CÁLCULO DOS STUDS <<<===
-
-        // Persistir a WallEntity
-        entity = wallRepository.save(entity);
-
-        // Relacionar a parede com os ambientes (usando WallRoomMapping)
-        for (RoomSideDTO roomSideDTO : dto.getRoomSides()) {
-            String roomType = roomSideDTO.getRoomType();
-
-            // Buscar a RoomEntity pelo roomType e floorNumber
-            RoomEntity roomEntity = roomRepository.findByRoomTypeAndFloorNumber(roomType, floorNumber)
-                    .orElseGet(() -> {
-                        // Se a RoomEntity não existir, criar uma nova com UUID
-                        RoomEntity newRoom = new RoomEntity();
-                        newRoom.setRoomType(roomType);
-                        newRoom.setFloorNumber(floorNumber);
-                        newRoom.setWetArea(roomSideDTO.isWetArea());
-                        newRoom.setUuid(UUID.randomUUID());
-                        return roomRepository.save(newRoom);
-                    });
-
-            // ===>>> COPIAR UUID DA ROOMENTITY PARA A WALLENTITY: <<<===
-            entity.setRoomUuid(roomEntity.getUuid());
-
-            // Criar WallRoomMapping
-            WallRoomMapping mapping = new WallRoomMapping();
-            mapping.setWall(entity);
-            mapping.setRoom(roomEntity);
-            mapping.setSide(roomSideDTO.getSideOfWall());
-
-            // Persistir o WallRoomMapping
-            wallRoomMappingRepository.save(mapping);
-            System.out.println("WallRoomMapping salvo com ID: " + mapping.getId());
-
-            // ===>>> IMPORTANTE: <<<===
-            // Adicionar a parede na lista de paredes da RoomEntity (bidirecional)
-            roomEntity.getWalls().add(entity);
-            // Não é necessário adicionar roomEntity em entity.getRooms(), pois o mapeamento é feito por "mappedBy"
-
-            // Determinar o tipo de material da parede com base no ambiente
-            String materialType = determineWallMaterialType(entity);
-            entity.setMaterialType(materialType);
-        }
-
-        // ===>>> NÃO É NECESSÁRIO SALVAR A WALLENTITY NOVAMENTE AQUI <<<===
-
-        // Forçar o carregamento da lista rooms
-        entity.getRooms().size();
-
-        return entity;
-    }
-
-    // ===>>> NOVO MÉTODO PARA DETERMINAR O MATERIAL DA PAREDE: <<<===
-    private String determineWallMaterialType(WallEntity wall) {
-        if (wall.isExternal()) {
-            return "Concrete"; // Parede externa sempre de concreto
-        }
-
-        // Verificar se algum dos ambientes é área molhada
-        boolean hasWetArea = wall.getRooms().stream().anyMatch(RoomEntity::isWetArea);
-
-        if (hasWetArea) {
-            return "Moisture Resistant Drywall"; // Usar material resistente à umidade
-        } else {
-            return "Drywall"; // Usar drywall comum
-        }
-    }
-
-
-    public ProjectEntity toEntity(ProjectInfoDTO dto) {
         ProjectEntity entity = new ProjectEntity();
+        entity.setId(dto.getProjectId());
+        entity.setProjectIdLegacy(dto.getProjectIdLegacy());
         entity.setProjectName(dto.getProjectName());
-        entity.setDateTime(LocalDateTime.parse(dto.getDateTime()));
+        try {
+            entity.setDateTime(dto.getDateTime() != null ? LocalDateTime.parse(dto.getDateTime()) : LocalDateTime.now());
+        } catch (DateTimeParseException e) {
+            log.warn("Falha ao parsear dateTime '{}'. Usando data atual.", dto.getDateTime());
+            entity.setDateTime(LocalDateTime.now());
+        }
         entity.setBuildingType(dto.getBuildingType());
         entity.setNumberOfFloors(dto.getNumberOfFloors());
         entity.setHasBasement(dto.isHasBasement());
+        entity.setStatus(dto.getStatus() != null ? dto.getStatus() : ProjectStatus.PLANNING);
+        entity.setBudgetAmount(dto.getBudgetAmount());
+        entity.setCurrency(dto.getCurrency());
+        entity.setStartDatePlanned(dto.getStartDatePlanned());
+        entity.setEndDatePlanned(dto.getEndDatePlanned());
+        entity.setClientId(dto.getClientId());
+        entity.setCompanyBranchId(dto.getCompanyBranchId());
 
-        // Converter a localização usando o novo método convertLocationEntity
-        entity.setLocationEntity(convertLocationEntity(dto.getLocation()));
-
-        // Converter e definir os andares do projeto usando o novo método convertFloor
-        List<FloorEntity> floors = dto.getCalculationStructure().stream()
-                .map(this::convertFloor)
-                .collect(Collectors.toList());
-        entity.setFloors(floors);
-
-        return entity;
-    }
-
-    private FloorEntity convertFloor(CalculationStructureDTO dto) {
-        FloorEntity entity = new FloorEntity();
-        // ... (atribuir valores da FloorEntity a partir do DTO) ...
-
-        // Converter as paredes (walls)
-        List<WallEntity> walls = dto.getWalls().stream()
-                .map(wallDTO -> convertWall(wallDTO, dto.getFloorNumber()))
-                .collect(Collectors.toList());
-        entity.setWalls(walls);
-
-        // ===>>> GERAR UUID PARA CADA ROOMENTITY E ASSOCIAR ÀS PAREDES: <<<===
-        for (WallDTO wallDTO : dto.getWalls()) { // Iterar pelos WallDTOs
-            for (RoomSideDTO roomSideDTO : wallDTO.getRoomSides()) { // Acessar roomSides do DTO
-                String roomType = roomSideDTO.getRoomType();
-                int floorNumber = dto.getFloorNumber(); // Obter floorNumber do dto
-
-                // Buscar a RoomEntity pelo roomType e floorNumber
-                RoomEntity roomEntity = roomRepository.findByRoomTypeAndFloorNumber(roomType, floorNumber)
-                        .orElseGet(() -> {
-                            // Se a RoomEntity não existir, criar uma nova com UUID
-                            RoomEntity newRoom = new RoomEntity();
-                            newRoom.setRoomType(roomType);
-                            newRoom.setFloorNumber(floorNumber);
-                            newRoom.setWetArea(roomSideDTO.isWetArea());
-                            newRoom.setUuid(UUID.randomUUID()); // Gerar o UUID do ambiente
-                            return roomRepository.save(newRoom);
-                        });
-
-                // ===>>> ASSOCIAR A PAREDE À ROOMENTITY: <<<===
-                // Buscar a WallEntity correspondente ao wallDTO
-                WallEntity wallEntity = wallRepository.findByWallId(wallDTO.getWallId()).orElseThrow(() -> new RuntimeException("Parede não encontrada!"));
-
-                // ===>>> COPIAR UUID DA ROOMENTITY PARA A WALLENTITY: <<<===
-                wallEntity.setRoomUuid(roomEntity.getUuid());
-
-                // ===>>> ATUALIZAR A WALLENTITY: <<<===
-                wallEntity = wallRepository.save(wallEntity); // Salvar a entidade após a atualização do roomUuid
-
-                // Criar WallRoomMapping
-                WallRoomMapping mapping = new WallRoomMapping();
-                mapping.setWall(wallEntity);
-                mapping.setRoom(roomEntity);
-                mapping.setSide(roomSideDTO.getSideOfWall());
-
-                wallRoomMappingRepository.save(mapping);
-                System.out.println("WallRoomMapping salvo com ID: " + mapping.getId());
-            }
+        if (dto.getLocation() != null) {
+            entity.setLocationEntity(locationConverter.requestDtoToEntity(dto.getLocation()));
         }
 
-        // ... (Converter outros elementos: ceiling, baseboards, etc.) ...
+        entity.setFloors(new ArrayList<>()); // Floors são adicionados no serviço
 
         return entity;
     }
 
-    // Método para converter LocationDTO em LocationEntity
-    private LocationEntity convertLocationEntity(LocationDTO dto) {
-        return new LocationEntity(
-                dto.getAddress(),
-                dto.getCity(),
-                dto.getProvince(),
-                dto.getPostalCode()
-        );
+    public ProjectDetailResponseDTO entityToDetailResponseDto(ProjectEntity entity) {
+        if (entity == null) return null;
+
+        ProjectDetailResponseDTO dto = new ProjectDetailResponseDTO();
+        dto.setProjectId(entity.getId());
+        dto.setProjectIdLegacy(entity.getProjectIdLegacy());
+        dto.setProjectName(entity.getProjectName());
+        dto.setDateTime(entity.getDateTime() != null ? entity.getDateTime().toString() : null);
+        dto.setBuildingType(entity.getBuildingType());
+        dto.setNumberOfFloors(entity.getNumberOfFloors());
+        dto.setHasBasement(entity.isHasBasement());
+        dto.setStatus(entity.getStatus());
+        dto.setBudgetAmount(entity.getBudgetAmount());
+        dto.setCurrency(entity.getCurrency());
+        dto.setStartDatePlanned(entity.getStartDatePlanned());
+        dto.setEndDatePlanned(entity.getEndDatePlanned());
+        dto.setStartDateActual(entity.getStartDateActual());
+        dto.setEndDateActual(entity.getEndDateActual());
+        dto.setClientId(entity.getClientId());
+        dto.setCompanyBranchId(entity.getCompanyBranchId());
+        dto.setCreatedBy(entity.getCreatedBy());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setLastModifiedBy(entity.getLastModifiedBy());
+        dto.setLastModifiedAt(entity.getLastModifiedAt());
+
+        if (entity.getLocationEntity() != null) {
+            dto.setLocation(locationConverter.entityToDto(entity.getLocationEntity()));
+        }
+
+        if (entity.getFloors() != null) {
+            // A conversão aqui deve estar correta agora que ProjectDetailResponseDTO.floors
+            // espera List<com.bufalari.building.responseDTO.FloorResponseDTO>
+            // e floorConverter.entityToDetailResponseDto retorna com.bufalari.building.responseDTO.FloorResponseDTO
+            dto.setFloors(entity.getFloors().stream()
+                .map(floorConverter::entityToDetailResponseDto)
+                .collect(Collectors.toList()));
+        } else {
+            dto.setFloors(Collections.emptyList());
+        }
+        return dto;
     }
 
+    // Novo método para converter Entity para ProjectInfoDTO (para a resposta do POST /create)
+    public ProjectInfoDTO entityToInfoResponseDto(ProjectEntity entity) {
+        if (entity == null) return null;
+        ProjectInfoDTO dto = new ProjectInfoDTO();
+        dto.setProjectId(entity.getId()); // ID UUID
+        dto.setProjectIdLegacy(entity.getProjectIdLegacy());
+        dto.setProjectName(entity.getProjectName());
+        dto.setDateTime(entity.getDateTime() != null ? entity.getDateTime().toString() : null);
+
+        if (entity.getLocationEntity() != null) {
+            dto.setLocation(locationConverter.entityToDto(entity.getLocationEntity()));
+        }
+        dto.setBuildingType(entity.getBuildingType());
+        dto.setNumberOfFloors(entity.getNumberOfFloors());
+        dto.setHasBasement(entity.isHasBasement());
+        dto.setStatus(entity.getStatus());
+        dto.setBudgetAmount(entity.getBudgetAmount());
+        dto.setCurrency(entity.getCurrency());
+        dto.setStartDatePlanned(entity.getStartDatePlanned());
+        dto.setEndDatePlanned(entity.getEndDatePlanned());
+        dto.setClientId(entity.getClientId());
+        dto.setCompanyBranchId(entity.getCompanyBranchId());
+
+        // ProjectInfoDTO não inclui a lista detalhada de andares (CalculationStructureDTO) na resposta do POST create.
+        // Se precisar, seria necessário mapear FloorEntity para CalculationStructureDTO.
+        // Por ora, omitindo essa conversão complexa para a resposta do POST.
+        dto.setCalculationStructure(Collections.emptyList()); // Ou nulo, dependendo da preferência
+
+        return dto;
+    }
 }

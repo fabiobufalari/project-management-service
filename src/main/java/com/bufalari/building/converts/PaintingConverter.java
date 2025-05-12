@@ -8,9 +8,18 @@ import org.springframework.stereotype.Component;
 public class PaintingConverter {
 
     public PaintingEntity toEntity(PaintingDTO dto) {
-        PaintingEntity entity = new PaintingEntity();
-        entity.setInteriorWallColor(dto.getInteriorWallColor());
-        entity.setExteriorWallColor(dto.getExteriorWallColor());
-        return entity;
+        if (dto == null) return null;
+        return PaintingEntity.builder()
+                .interiorWallColor(dto.getInteriorWallColor())
+                .exteriorWallColor(dto.getExteriorWallColor())
+                .build();
+    }
+
+    public PaintingDTO toDto(PaintingEntity entity) {
+        if (entity == null) return null;
+        return new PaintingDTO(
+                entity.getInteriorWallColor(),
+                entity.getExteriorWallColor()
+        );
     }
 }
