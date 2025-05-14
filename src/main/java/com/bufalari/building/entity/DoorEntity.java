@@ -1,10 +1,8 @@
 package com.bufalari.building.entity;
 
-import com.bufalari.building.auditing.AuditableBaseEntity; // Assumindo auditável
+import com.bufalari.building.auditing.AuditableBaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.Objects;
 import java.util.UUID;
 
@@ -15,39 +13,35 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Table(name = "doors")
-public class DoorEntity extends AuditableBaseEntity { // Auditável
+public class DoorEntity extends AuditableBaseEntity {
 
     @Id
-	@GeneratedValue(generator = "UUID")
-	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-	@Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
-	private UUID id; // <<<--- UUID
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    private UUID id;
 
     @Column(length = 50)
-    private String doorId; // ID textual/descritivo
+    private String doorId;
 
-    // Campos para dimensões originais em pés e polegadas separadas
+    @Column(name = "width_foot_original")
     private double widthFoot;
-    private int widthInches; // Polegadas inteiras
+    private int widthInches;
+    @Column(name = "height_foot_original")
     private double heightFoot;
-    private int heightInches; // Polegadas inteiras
+    private int heightInches;
+    @Column(name = "thickness_inch")
     private double thicknessInch;
 
-    // Campos para dimensões totais calculadas em pés decimais (pode ser @Transient se não persistido)
-    // Se persistido, deve ser calculado e definido antes de salvar
     @Column(name = "total_width_feet")
-    private Double width;  // Ex: 2.5 para 2 pés e 6 polegadas
+    private Double width;
     @Column(name = "total_height_feet")
-    private Double height; // Ex: 6.75 para 6 pés e 9 polegadas
-
-    // Opcional: Relação com WallEntity se uma porta sempre pertence a uma parede
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "wall_id")
-    // private WallEntity wall;
+    private Double height;
 
     @PrePersist
     @PreUpdate
     private void calculateTotalDimensions() {
+        if (this.widthInches < 0) this.widthInches = 0;
+        if (this.heightInches < 0) this.heightInches = 0;
         this.width = this.widthFoot + (this.widthInches / 12.0);
         this.height = this.heightFoot + (this.heightInches / 12.0);
     }
@@ -55,12 +49,13 @@ public class DoorEntity extends AuditableBaseEntity { // Auditável
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || !(o instanceof DoorEntity that)) return false;
-        return id != null && Objects.equals(id, that.id);
+        if (o == null || getClass() != o.getClass()) return false;
+        DoorEntity that = (DoorEntity) o;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? Objects.hash(id) : getClass().hashCode();
+        return Objects.hash(id);
     }
 }

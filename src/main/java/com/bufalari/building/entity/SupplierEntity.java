@@ -1,12 +1,9 @@
 package com.bufalari.building.entity;
 
 import com.bufalari.building.auditing.AuditableBaseEntity;
-import com.bufalari.building.entity.AddressEmbeddable; // <<< Usar entidade embutível comum
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-
-import java.util.ArrayList; // Importar
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -17,41 +14,43 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "suppliers", indexes = { // Adicionar índices
-    @Index(name = "idx_supplier_name", columnList = "name"),
-    @Index(name = "idx_supplier_bin", columnList = "businessIdentificationNumber", unique = true)
+@Table(name = "suppliers_cache", indexes = { // Renomear tabela para indicar cache
+    @Index(name = "idx_supplier_cache_name", columnList = "name"),
+    @Index(name = "idx_supplier_cache_bin", columnList = "businessIdentificationNumber", unique = true)
 })
 public class SupplierEntity extends AuditableBaseEntity {
 
     @Id
-	@GeneratedValue(generator = "UUID")
-	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-	@Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
-	private UUID id; // <<<--- UUID
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    private UUID id; // ID da cópia local
+
+    @Column(name = "original_supplier_id", nullable = false, updatable = false, columnDefinition = "uuid")
+    private UUID originalSupplierId; // ID do supplier no supplier-service
 
     @Column(nullable = false, length = 200)
-    private String name; // Legal name / Razão Social
+    private String name;
 
     @Column(length = 200)
-    private String tradeName; // Trading name / Nome Fantasia
+    private String tradeName;
 
     @Column(unique = true, length = 50)
-    private String businessIdentificationNumber; // CNPJ, Business Number, etc.
+    private String businessIdentificationNumber;
 
     @Embedded
-    private AddressEmbeddable address; // <<< Usar AddressEmbeddable comum
+    private AddressEmbeddable address;
 
-    @Column(length = 100) // Aumentar tamanho
+    @Column(length = 100)
     private String primaryContactName;
 
-    @Column(length = 50) // Aumentar tamanho
+    @Column(length = 50)
     private String primaryContactPhone;
 
-    @Column(length = 150) // Aumentar tamanho
+    @Column(length = 150)
     private String primaryContactEmail;
 
     @Column(length = 50)
-    private String category; // e.g., MATERIAL, SERVICE, EQUIPMENT_RENTAL
+    private String category;
 
     @Column(length = 100)
     private String bankName;
@@ -63,8 +62,8 @@ public class SupplierEntity extends AuditableBaseEntity {
     private String bankAccount;
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "supplier_document_references",
-                     joinColumns = @JoinColumn(name = "supplier_id", foreignKey = @ForeignKey(name = "fk_suppdoc_supplier")))
+    @CollectionTable(name = "supplier_cache_doc_refs",
+                     joinColumns = @JoinColumn(name = "supplier_cache_id", foreignKey = @ForeignKey(name = "fk_suppcachedoc_suppliercache")))
     @Column(name = "document_reference", length = 500)
     @Builder.Default
     private List<String> documentReferences = new ArrayList<>();
@@ -72,12 +71,13 @@ public class SupplierEntity extends AuditableBaseEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || !(o instanceof SupplierEntity that)) return false;
-        return id != null && Objects.equals(id, that.id);
+        if (o == null || getClass() != o.getClass()) return false;
+        SupplierEntity that = (SupplierEntity) o;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? Objects.hash(id) : getClass().hashCode();
+        return Objects.hash(id);
     }
 }

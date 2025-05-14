@@ -1,24 +1,48 @@
 # Path: src/test/resources/application-test.yml
 
+# =========================================
+# External Service URLs (Mocked or Test Instances)
+# =========================================
 auth:
   service:
-    url: http://localhost:9999 # Ou outra URL válida para teste
+    url: http://localhost:9999 # Mocked auth service URL for tests (ajuste se necessário)
 
-# Adicione esta seção / Add this section
-jwt:
-  # Use a MESMA chave secreta do application.yml principal ou uma variável de ambiente
-  # Use the SAME secret key from the main application.yml or an environment variable
-  secret: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970!} # <<-- ADICIONE AQUI
+# =========================================
+# JWT Configuration for Tests
+# =========================================
+security:
+  jwt:
+    token:
+      # Para testes, use uma chave fixa e segura.
+      # Esta propriedade DEVE corresponder ao @Value em JwtUtil.java
+      secret-key: "a-fixed-secure-test-key-for-project-management-32bytes-long-minimum-value" # <<< VALOR DIRETO E SEGURO PARA TESTES
 
-# Configurações do banco de dados H2 (já existentes)
+# =========================================
+# Spring Boot Application Configuration for Tests
+# =========================================
 spring:
   datasource:
-    url: jdbc:h2:mem:projectdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:project_management_test_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
     driverClassName: org.h2.Driver
     username: sa
     password: password
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop
-    # show-sql: true
+      ddl-auto: create-drop # Recria o schema a cada execução de teste
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  # Desabilitar Flyway ou Liquibase para testes com H2 em memória, se estiverem ativos no classpath
+  # flyway.enabled: false
+  # liquibase.enabled: false
+
+# =========================================
+# Logging Configuration for Tests
+# =========================================
+logging:
+  level:
+    com.bufalari.building: DEBUG
+    org.springframework.security: INFO # Pode ser DEBUG para depurar segurança em testes
+    org.hibernate.SQL: DEBUG # Útil para ver SQLs geradas nos testes

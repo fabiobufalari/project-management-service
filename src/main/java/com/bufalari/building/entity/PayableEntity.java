@@ -4,14 +4,12 @@ import com.bufalari.building.auditing.AuditableBaseEntity;
 import com.bufalari.building.enums.PayableStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator; // Importar
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList; // Importar
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID; // <<<--- IMPORT UUID
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -19,26 +17,25 @@ import java.util.UUID; // <<<--- IMPORT UUID
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "project_payables_cache") // Nome de tabela para indicar que pode ser uma cópia/cache
+@Table(name = "project_payables_cache")
 public class PayableEntity extends AuditableBaseEntity {
 
     @Id
-	@GeneratedValue(generator = "UUID")
-	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-	@Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
-	private UUID id; // <<<--- UUID (ID da cópia local/cache)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    private UUID id;
 
     @Column(name = "original_payable_id", nullable = false, updatable = false, columnDefinition = "uuid")
-    private UUID originalPayableId; // <<<--- UUID do Payable no serviço de origem
+    private UUID originalPayableId;
 
-    @Column(nullable = false, columnDefinition = "uuid") // Se Supplier ID for UUID no serviço de Supplier
-    private UUID supplierId; // <<<--- UUID (assumindo que supplier service usa UUID)
+    @Column(name = "supplier_id", nullable = false, columnDefinition = "uuid")
+    private UUID supplierId;
 
-    @Column(name = "project_id", nullable = false, columnDefinition = "uuid") // Assumindo que este projeto usa UUID
-    private UUID projectId; // <<<--- UUID (ID do projeto neste serviço)
+    @Column(name = "project_id", nullable = false, columnDefinition = "uuid")
+    private UUID projectId;
 
     @Column(name = "cost_center_id")
-    private Long costCenterId; // Mantém Long se o serviço de centro de custo usar Long
+    private Long costCenterId;
 
     @Column(nullable = false, length = 255)
     private String description;
@@ -83,12 +80,13 @@ public class PayableEntity extends AuditableBaseEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || !(o instanceof PayableEntity that)) return false;
-        return id != null && Objects.equals(id, that.id);
+        if (o == null || getClass() != o.getClass()) return false;
+        PayableEntity that = (PayableEntity) o;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? Objects.hash(id) : getClass().hashCode();
+        return Objects.hash(id);
     }
 }

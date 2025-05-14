@@ -1,15 +1,12 @@
 package com.bufalari.building.entity;
 
 import com.bufalari.building.auditing.AuditableBaseEntity;
-
 import com.bufalari.building.enums.ReceivableStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList; // Importar
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -20,23 +17,22 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "project_receivables_cache") // Nome de tabela para indicar cópia/cache
+@Table(name = "project_receivables_cache")
 public class ReceivableEntity extends AuditableBaseEntity {
 
     @Id
-	@GeneratedValue(generator = "UUID")
-	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-	@Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
-	private UUID id; // <<<--- UUID (ID da cópia local/cache)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    private UUID id;
 
     @Column(name = "original_receivable_id", nullable = false, updatable = false, columnDefinition = "uuid")
-    private UUID originalReceivableId; // <<<--- UUID do Receivable no serviço de origem
+    private UUID originalReceivableId;
 
-    @Column(nullable = false, columnDefinition = "uuid")
-    private UUID clientId; // <<<--- UUID (assumindo que client service usa UUID)
+    @Column(name = "client_id", nullable = false, columnDefinition = "uuid")
+    private UUID clientId;
 
     @Column(name = "project_id", nullable = false, columnDefinition = "uuid")
-    private UUID projectId; // <<<--- UUID (ID do projeto neste serviço)
+    private UUID projectId;
 
     @Column(nullable = false, length = 255)
     private String description;
@@ -84,12 +80,13 @@ public class ReceivableEntity extends AuditableBaseEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || !(o instanceof ReceivableEntity that)) return false;
-        return id != null && Objects.equals(id, that.id);
+        if (o == null || getClass() != o.getClass()) return false;
+        ReceivableEntity that = (ReceivableEntity) o;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? Objects.hash(id) : getClass().hashCode();
+        return Objects.hash(id);
     }
 }

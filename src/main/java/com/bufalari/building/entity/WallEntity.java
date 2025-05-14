@@ -3,10 +3,9 @@ package com.bufalari.building.entity;
 import com.bufalari.building.auditing.AuditableBaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.math.BigDecimal; // Considerar BigDecimal para medidas se precisão for crítica
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,13 +28,12 @@ public class WallEntity extends AuditableBaseEntity {
     public static final String TYPE_INTERNAL = "internal";
 
     @Id
-	@GeneratedValue(generator = "UUID_Generator_Wall") // Nome único para o gerador
-	@GenericGenerator(name = "UUID_Generator_Wall", strategy = "org.hibernate.id.UUIDGenerator")
-	@Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
-	private UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    private UUID id;
 
     @Column(nullable = false, length = 50)
-    private String wallId; // Identificador textual da parede
+    private String wallId;
 
     @Column(length = 255)
     private String description;
@@ -43,17 +41,31 @@ public class WallEntity extends AuditableBaseEntity {
     @Column(nullable = false, length = 20)
     private String type;
 
+    @Column(name = "length_foot_original")
     private double lengthFoot;
+    @Column(name = "length_inches_original")
     private double lengthInches;
+    @Column(name = "height_foot_original")
     private double heightFoot;
+    @Column(name = "height_inches_original")
     private double heightInches;
+    @Column(name = "wall_thickness_inch")
     private double wallThicknessInch;
+
+    @Column(name = "stud_spacing_inch")
+    private Double studSpacingInch;
+
 
     @Column(length = 100)
     private String materialType;
 
+    @Column(name = "linear_footage")
     private double linearFootage;
+    @Column(name = "square_footage")
     private double squareFootage;
+    @Column(name = "stud_linear_footage")
+    private double studLinearFootage;
+
 
     @Column(nullable = false)
     private boolean isExternal;
@@ -65,12 +77,8 @@ public class WallEntity extends AuditableBaseEntity {
     @Builder.Default
     private int studCount = 0;
 
-    @Column(name = "stud_linear_footage", nullable = false)
-    @Builder.Default
-    private double studLinearFootage = 0.0;
-
     private Integer numberOfPlates;
-    private Double studSpacingInch;
+
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "wall_id", foreignKey = @ForeignKey(name = "fk_window_wall"))
@@ -105,31 +113,22 @@ public class WallEntity extends AuditableBaseEntity {
     @PreUpdate
     private void updateCalculatedFieldsAndConsistency() {
         this.isExternal = TYPE_EXTERNAL.equalsIgnoreCase(this.type);
-
-        if (this.project == null) {
-             if (this.roomMappings != null && !this.roomMappings.isEmpty() &&
-                 this.roomMappings.get(0).getRoom() != null &&
-                 this.roomMappings.get(0).getRoom().getProject() != null) {
-                this.project = this.roomMappings.get(0).getRoom().getProject();
-                log.debug("Project ID {} set for Wall (Textual ID: {}) via RoomMapping.",
-                          this.project != null ? this.project.getId() : "NULL_PROJECT", this.wallId);
-             } else {
-                // Log com ID textual da parede se o ID UUID ainda não estiver definido
-                log.warn("WallEntity (Textual ID: {}) is being saved without an explicit Project reference or derivable from RoomMappings.",
-                          this.getWallId()); // Use getWallId() para evitar NullPointer se this.wallId for nulo
-             }
+        if (this.project == null && this.roomMappings != null && !this.roomMappings.isEmpty() &&
+            this.roomMappings.get(0).getRoom() != null && this.roomMappings.get(0).getRoom().getProject() != null) {
+            this.project = this.roomMappings.get(0).getRoom().getProject();
         }
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || !(o instanceof WallEntity that)) return false;
-        return id != null && Objects.equals(id, that.id);
+        if (o == null || getClass() != o.getClass()) return false;
+        WallEntity that = (WallEntity) o;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? Objects.hash(id) : getClass().hashCode();
+        return Objects.hash(id);
     }
 }

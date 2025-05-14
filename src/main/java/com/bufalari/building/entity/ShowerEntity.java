@@ -1,10 +1,8 @@
 package com.bufalari.building.entity;
 
-import com.bufalari.building.auditing.AuditableBaseEntity; // Assumindo auditável
+import com.bufalari.building.auditing.AuditableBaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.Objects;
 import java.util.UUID;
 
@@ -15,29 +13,32 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Table(name = "showers")
-public class ShowerEntity extends AuditableBaseEntity { // Auditável
+public class ShowerEntity extends AuditableBaseEntity {
 
     @Id
-	@GeneratedValue(generator = "UUID")
-	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-	@Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
-	private UUID id; // <<<--- UUID
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    private UUID id;
 
     @Column(length = 100)
-    private String type; // Ex: "Box", "Walk-in"
+    private String type;
+
     @Column(length = 100)
-    private String material; // Ex: "Glass", "Tile"
-    private double heightFoot; // Altura em pés
+    private String material;
+
+    @Column(name = "height_foot") // double sem precision/scale
+    private double heightFoot;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || !(o instanceof ShowerEntity that)) return false;
-        return id != null && Objects.equals(id, that.id);
+        if (o == null || getClass() != o.getClass()) return false;
+        ShowerEntity that = (ShowerEntity) o;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? Objects.hash(id) : getClass().hashCode();
+        return Objects.hash(id);
     }
 }

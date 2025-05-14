@@ -1,10 +1,8 @@
 package com.bufalari.building.entity;
 
-import com.bufalari.building.auditing.AuditableBaseEntity; // Assumindo auditável
+import com.bufalari.building.auditing.AuditableBaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.Objects;
 import java.util.UUID;
 
@@ -15,28 +13,28 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Table(name = "sinks")
-public class SinkEntity extends AuditableBaseEntity { // Auditável
+public class SinkEntity extends AuditableBaseEntity {
 
     @Id
-	@GeneratedValue(generator = "UUID")
-	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-	@Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
-	private UUID id; // <<<--- UUID
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    private UUID id;
 
     @Column(length = 100)
-    private String material; // Ex: "Ceramic", "Stainless Steel"
+    private String material;
     @Column(length = 100)
-    private String faucetMaterial; // Ex: "Chrome", "Bronze"
+    private String faucetMaterial;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || !(o instanceof SinkEntity that)) return false;
-        return id != null && Objects.equals(id, that.id);
+        if (o == null || getClass() != o.getClass()) return false;
+        SinkEntity that = (SinkEntity) o;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? Objects.hash(id) : getClass().hashCode();
+        return Objects.hash(id);
     }
 }

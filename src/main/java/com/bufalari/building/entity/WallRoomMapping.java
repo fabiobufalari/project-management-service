@@ -3,8 +3,6 @@ package com.bufalari.building.entity;
 import com.bufalari.building.auditing.AuditableBaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.Objects;
 import java.util.UUID;
 
@@ -19,17 +17,16 @@ import java.util.UUID;
            @Index(name = "idx_wallroommap_wall_id", columnList = "wall_id"),
            @Index(name = "idx_wallroommap_room_id", columnList = "room_id")
        },
-       uniqueConstraints = { // <<<--- Local CORRETO para @UniqueConstraint
+       uniqueConstraints = {
            @UniqueConstraint(name = "uk_wall_room_side", columnNames = {"wall_id", "room_id", "side"})
        }
 )
 public class WallRoomMapping extends AuditableBaseEntity {
 
     @Id
-	@GeneratedValue(generator = "UUID_Generator_WRM")
-	@GenericGenerator(name = "UUID_Generator_WRM", strategy = "org.hibernate.id.UUIDGenerator")
-	@Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
-	private UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "wall_id", nullable = false,
@@ -47,12 +44,13 @@ public class WallRoomMapping extends AuditableBaseEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || !(o instanceof WallRoomMapping that)) return false;
-        return id != null && Objects.equals(id, that.id);
+        if (o == null || getClass() != o.getClass()) return false;
+        WallRoomMapping that = (WallRoomMapping) o;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? Objects.hash(id) : getClass().hashCode();
+        return Objects.hash(id);
     }
 }

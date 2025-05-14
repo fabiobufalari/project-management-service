@@ -1,11 +1,8 @@
 package com.bufalari.building.entity;
 
-// import com.bufalari.building.DTO.ClientContactInfoDTO; // Removido, DTO não deve ser embutido
 import com.bufalari.building.auditing.AuditableBaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-// import org.hibernate.annotations.GenericGenerator; // Não mais necessário com GenerationType.UUID
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -30,8 +27,8 @@ public class ClientEntity extends AuditableBaseEntity {
     @Column(nullable = false, length = 200)
     private String clientName;
 
-    @Embedded // Informações de contato embutidas
-    private ClientContactInfoEmbeddable contactInfo; // <<< CORRIGIDO para Embeddable
+    @Embedded
+    private ClientContactInfoEmbeddable contactInfo;
 
     @OneToMany(mappedBy = "client", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @Builder.Default
@@ -40,13 +37,13 @@ public class ClientEntity extends AuditableBaseEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false; // Verificação de tipo mais precisa
+        if (o == null || getClass() != o.getClass()) return false;
         ClientEntity that = (ClientEntity) o;
         return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id); // Apenas ID se for único após persistência
+        return Objects.hash(id);
     }
 }
