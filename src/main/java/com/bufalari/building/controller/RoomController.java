@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/rooms")
+@RequestMapping("/project-management/rooms")
 @RequiredArgsConstructor
 @Tag(name = "Room Management", description = "Endpoints for managing rooms within projects")
 // @SecurityRequirement(name = "bearerAuth") // Se a segurança global não estiver na Application class

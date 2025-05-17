@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/walls")
+@RequestMapping("/project-management/walls")
 @RequiredArgsConstructor
 @Tag(name = "Wall Management & Calculation", description = "Endpoints for managing walls and calculating materials")
 public class WallController {
