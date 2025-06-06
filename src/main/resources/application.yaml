@@ -1,0 +1,90 @@
+# =========================================
+# ms project-management-service
+# =========================================
+
+# =========================================
+# Server Configuration
+# =========================================
+server:
+  port: 8085 # Porta deste serviço
+  #servlet:
+    #context-path: /api # <<< MANTIDO O CONTEXT PATH /api
+
+# =========================================
+# Spring Boot Application Configuration
+# =========================================
+spring:
+  application:
+    name: project-management-service
+  datasource:
+    url: ${DATASOURCE_URL} # <<< BANCO CENTRALIZADO
+    username: ${DATASOURCE_USERNAME_PROD}
+    password: ${DATASOURCE_PASSWORD_PROD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# =========================================
+# External Service URLs
+# =========================================
+auth:
+  service:
+    url: ${AUTH_SERVICE_URL} # URL do Authentication Service
+# Adicionar URLs para AP/AR/Employee/etc. se/quando forem chamados por este serviço
+  payable:
+    service:
+     url: ${ACCOUNTS_PAYABLE}
+  receivable:
+    service:
+     url: ${ACCOUNTS_RECEIVABLE}
+  employee:
+   service:
+     url: ${EMPLOYEE_AND_COSTS_SERVICE}
+
+# =========================================
+# JWT Configuration (Este serviço VALIDA)
+# =========================================
+security:
+  jwt:
+    token:
+      secret-key: ${JWT_SECRET_KEY} # <<< CHAVE IDÊNTICA
+
+# =========================================
+# Logging Configuration
+# =========================================
+logging:
+  level:
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    com.bufalari.building: DEBUG # Pacote raiz deste serviço (confirmar pacote)
+    org.hibernate.SQL: DEBUG
+
+# =========================================
+# Swagger/OpenAPI Configuration
+# =========================================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+# =========================================
+# Actuator Configuration
+# =========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: when_authorized
