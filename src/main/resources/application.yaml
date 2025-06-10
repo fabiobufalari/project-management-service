@@ -1,7 +1,6 @@
 # =========================================
 # ms project-management-service
 # =========================================
-
 # =========================================
 # Server Configuration
 # =========================================
@@ -9,7 +8,6 @@ server:
   port: 8085 # Porta deste serviço
   #servlet:
     #context-path: /api # <<< MANTIDO O CONTEXT PATH /api
-
 # =========================================
 # Spring Boot Application Configuration
 # =========================================
@@ -25,11 +23,10 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-
 # =========================================
 # External Service URLs
 # =========================================
@@ -46,7 +43,6 @@ auth:
   employee:
    service:
      url: ${EMPLOYEE_AND_COSTS_SERVICE}
-
 # =========================================
 # JWT Configuration (Este serviço VALIDA)
 # =========================================
@@ -54,7 +50,6 @@ security:
   jwt:
     token:
       secret-key: ${JWT_SECRET_KEY} # <<< CHAVE IDÊNTICA
-
 # =========================================
 # Logging Configuration
 # =========================================
@@ -64,7 +59,6 @@ logging:
     org.springframework.security: INFO
     com.bufalari.building: DEBUG # Pacote raiz deste serviço (confirmar pacote)
     org.hibernate.SQL: DEBUG
-
 # =========================================
 # Swagger/OpenAPI Configuration
 # =========================================
@@ -76,7 +70,6 @@ springdoc:
     operations-sorter: method
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
-
 # =========================================
 # Actuator Configuration
 # =========================================
@@ -88,3 +81,4 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+
